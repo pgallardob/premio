@@ -1,0 +1,29 @@
+[
+  {
+    "id": "refreshment",
+    "name": "Una pausa refrescante",
+    "description": "Una bebida individual para refrescar tu día.",
+    "category": "BEBIDAS",
+    "image": "/assets/images/refreshment.svg",
+    "initialStock": 0,
+    "featured": true
+  },
+  {
+    "id": "snack",
+    "name": "Un pequeño antojo",
+    "description": "Un snack individual para ese momento de antojo.",
+    "category": "SNACKS",
+    "image": "/assets/images/snack.svg",
+    "initialStock": 0,
+    "featured": false
+  },
+  {
+    "id": "coffee",
+    "name": "Un momento de calma",
+    "description": "Un café individual para disfrutar sin apuro.",
+    "category": "CAFÉ",
+    "image": "/assets/images/coffee.svg",
+    "initialStock": 0,
+    "featured": false
+  }
+]

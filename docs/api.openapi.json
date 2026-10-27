@@ -1,0 +1,98 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Los Olivos Premio", "version": "0.2.0", "description": "Same-origin API. Persistent single-process store. No public test mode. Fresh installations are paused with zero stock and 24-hour protection enabled. All errors use the Error schema. Reuse the Idempotency-Key after uncertain network failures." },
+  "servers": [{ "url": "http://localhost:4173" }],
+  "paths": {
+    "/healthz": { "get": { "operationId": "health", "summary": "Process health only; reveals no business state or credentials.", "responses": { "200": { "description": "{ status: ok }" } } } },
+    "/api/status": {
+      "get": { "operationId": "getCampaign", "summary": "Campaign rules and available prizes; establishes a signed device cookie without registering a participation.", "responses": { "200": { "description": "Campaign, rules, prizes and availability. No test-mode field.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Campaign" } } } } } }
+    },
+    "/api/participations": {
+      "post": {
+        "operationId": "participate", "summary": "Atomically register one explicit participation. Reserve one prize on a winning position. Replaying the same key and device returns the original result.",
+        "parameters": [{ "in": "header", "name": "Idempotency-Key", "required": true, "schema": { "type": "string", "minLength": 16, "maxLength": 80 } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "additionalProperties": false, "properties": { "dailyCode": { "type": "string", "maxLength": 24 } } }, "example": {} } } },
+        "responses": {
+          "200": { "description": "Accepted or replayed; won=true contains a private Coupon.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Participation" } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "403": { "description": "DAILY_CODE_REQUIRED: missing, expired or incorrect local code.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "409": { "description": "CAMPAIGN_PAUSED.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "429": { "description": "COOLDOWN or RATE_LIMITED. retryAt identifies the next allowed time; Retry-After is in seconds.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "503": { "description": "OUT_OF_STOCK; no participation is counted.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+        }
+      }
+    },
+    "/api/wallet": {
+      "get": { "operationId": "getWallet", "summary": "Return coupons issued to or explicitly saved by this signed device cookie. No enumeration without ownership or the private token.", "responses": { "200": { "description": "{ coupons: Coupon[] }", "content": { "application/json": { "schema": { "type": "object", "required": ["coupons"], "properties": { "coupons": { "type": "array", "items": { "$ref": "#/components/schemas/Coupon" } } } } } } } } }
+    },
+    "/api/wallet/coupons": {
+      "post": { "operationId": "saveCouponToWallet", "summary": "Idempotently bookmark a coupon in this browser using its private bearer token. Retains the original owner, status, stock and participation count. Up to 100 additional browsers per coupon.", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["token"], "additionalProperties": false, "properties": { "token": { "type": "string", "pattern": "^[a-f0-9]{64}$" } } } } } }, "responses": { "200": { "description": "{ saved: true }; repeated saves do not duplicate the coupon." }, "400": { "$ref": "#/components/responses/BadRequest" }, "403": { "$ref": "#/components/responses/Forbidden" }, "404": { "$ref": "#/components/responses/NotFound" }, "409": { "description": "WALLET_LIMIT_REACHED: coupon has reached the saved-browser limit." }, "429": { "description": "RATE_LIMITED; respect Retry-After." } } }
+    },
+    "/api/coupons/{token}": {
+      "parameters": [{ "$ref": "#/components/parameters/Token" }],
+      "get": { "operationId": "getCoupon", "summary": "Read a coupon using its unguessable bearer token. Possession of the link grants access. Does not redeem.", "responses": { "200": { "description": "Coupon", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Coupon" } } } }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    },
+    "/api/coupons/{token}/qr": {
+      "parameters": [{ "$ref": "#/components/parameters/Token" }],
+      "get": { "operationId": "getCouponQr", "summary": "PNG QR containing the administrative validation link, not the private coupon token.", "responses": { "200": { "description": "QR image", "content": { "image/png": { "schema": { "type": "string", "format": "binary" } } } }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    },
+    "/api/campaign/qr": {
+      "get": { "operationId": "getCampaignQr", "summary": "QR pointing to configured PUBLIC_URL. A localhost URL is not reachable from a phone.", "responses": { "200": { "description": "PNG QR", "content": { "image/png": { "schema": { "type": "string", "format": "binary" } } } } } }
+    },
+    "/api/admin/login": {
+      "post": { "operationId": "login", "summary": "Verify password; set an HttpOnly, SameSite=Strict session cookie. Rate limited. Never returns the password or hash.", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["password"], "additionalProperties": false, "properties": { "password": { "type": "string", "maxLength": 256 } } } } } }, "responses": { "200": { "$ref": "#/components/responses/Session" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "429": { "description": "Too many login attempts." } } }
+    },
+    "/api/admin/session": {
+      "get": { "operationId": "getSession", "security": [{ "session": [] }], "responses": { "200": { "$ref": "#/components/responses/Session" }, "401": { "$ref": "#/components/responses/Unauthorized" } } }
+    },
+    "/api/admin/logout": {
+      "post": { "operationId": "logout", "security": [{ "session": [], "csrf": [] }], "responses": { "200": { "description": "{ ok: true }; session revoked." }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" } } }
+    },
+    "/api/admin/dashboard": {
+      "get": { "operationId": "getDashboard", "security": [{ "session": [] }], "summary": "Totals, last 100 participations, coupons, inventory, daily activity and safe configuration (never secret hashes).", "responses": { "200": { "description": "Administrative snapshot." }, "401": { "$ref": "#/components/responses/Unauthorized" } } }
+    },
+    "/api/admin/settings": {
+      "patch": {
+        "operationId": "updateSettings", "security": [{ "session": [], "csrf": [] }], "summary": "Update validated rules. interval can change only between cycles. expiryDays affects new coupons only. Daily codes expire at midnight in America/Santiago.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "additionalProperties": false, "properties": { "interval": { "type": "integer", "minimum": 2, "maximum": 1000 }, "expiryDays": { "type": "integer", "minimum": 1, "maximum": 30 }, "cooldownEnabled": { "type": "boolean" }, "dailyCodeEnabled": { "type": "boolean" }, "campaignActive": { "type": "boolean" }, "dailyCode": { "type": "string", "minLength": 4, "maxLength": 24 } } } } } },
+        "responses": { "200": { "description": "Safe settings." }, "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "409": { "description": "CYCLE_IN_PROGRESS; current cycle must complete before interval can change." } }
+      }
+    },
+    "/api/admin/inventory/{prizeId}": {
+      "parameters": [{ "name": "prizeId", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "patch": { "operationId": "setInventory", "security": [{ "session": [], "csrf": [] }], "summary": "Set available, unreserved units. Existing reservations remain unchanged.", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["stock"], "additionalProperties": false, "properties": { "stock": { "type": "integer", "minimum": 0, "maximum": 10000 } } } } } }, "responses": { "200": { "description": "Updated inventory." }, "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    },
+    "/api/admin/coupons/{code}": {
+      "parameters": [{ "$ref": "#/components/parameters/Code" }],
+      "get": { "operationId": "validateCoupon", "security": [{ "session": [] }], "summary": "Validate before showing an explicit redemption confirmation. GET never redeems.", "responses": { "200": { "description": "Coupon and current eligibility.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Coupon" } } } }, "401": { "$ref": "#/components/responses/Unauthorized" }, "404": { "$ref": "#/components/responses/NotFound" } } }
+    },
+    "/api/admin/coupons/{code}/redeem": {
+      "parameters": [{ "$ref": "#/components/parameters/Code" }],
+      "post": { "operationId": "redeemCoupon", "security": [{ "session": [], "csrf": [] }], "summary": "Atomically redeem one unexpired coupon. Two simultaneous calls cannot both succeed. Stock was already reserved at issue, so is not deducted twice.", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "additionalProperties": false } } } }, "responses": { "200": { "description": "Redeemed Coupon." }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "404": { "$ref": "#/components/responses/NotFound" }, "409": { "description": "COUPON_REDEEMED or COUPON_EXPIRED; no stock mutation." } } }
+    },
+    "/api/admin/export": {
+      "get": { "operationId": "exportCoupons", "security": [{ "session": [] }], "summary": "CSV coupon register. Contains no private bearer tokens or anonymous device hashes.", "responses": { "200": { "description": "CSV download.", "content": { "text/csv": { "schema": { "type": "string" } } } }, "401": { "$ref": "#/components/responses/Unauthorized" } } }
+    }
+  },
+  "components": {
+    "securitySchemes": { "session": { "type": "apiKey", "in": "cookie", "name": "olivos_session" }, "csrf": { "type": "apiKey", "in": "header", "name": "X-CSRF-Token" } },
+    "parameters": {
+      "Token": { "name": "token", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^[a-f0-9]{64}$" } },
+      "Code": { "name": "code", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^OLV-[A-F0-9]{12}$" } }
+    },
+    "responses": {
+      "Session": { "description": "Session established or restored.", "content": { "application/json": { "schema": { "type": "object", "required": ["csrfToken", "expiresAt"], "properties": { "csrfToken": { "type": "string" }, "expiresAt": { "type": "string", "format": "date-time" } } } } } },
+      "BadRequest": { "description": "INVALID_INPUT or INVALID_JSON.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "NotFound": { "description": "NOT_FOUND.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Unauthorized": { "description": "UNAUTHORIZED; sign in again.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+      "Forbidden": { "description": "FORBIDDEN; origin or CSRF validation failed.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+    },
+    "schemas": {
+      "Error": { "type": "object", "required": ["error"], "properties": { "error": { "type": "object", "required": ["code", "message"], "properties": { "code": { "type": "string" }, "message": { "type": "string" }, "retryAt": { "type": "string", "format": "date-time" } } } } },
+      "Prize": { "type": "object", "required": ["id", "name", "description", "category", "image", "stock"], "properties": { "id": { "type": "string" }, "name": { "type": "string" }, "description": { "type": "string" }, "category": { "type": "string" }, "image": { "type": "string" }, "stock": { "type": "integer", "minimum": 0 }, "featured": { "type": "boolean" } } },
+      "Coupon": { "type": "object", "required": ["code", "token", "prize", "issuedAt", "expiresAt", "status", "redeemedAt"], "properties": { "code": { "type": "string" }, "token": { "type": "string" }, "prize": { "$ref": "#/components/schemas/Prize" }, "issuedAt": { "type": "string", "format": "date-time" }, "expiresAt": { "type": "string", "format": "date-time" }, "status": { "enum": ["active", "redeemed", "expired"] }, "redeemedAt": { "type": ["string", "null"] } } },
+      "Participation": { "type": "object", "required": ["id", "won", "createdAt", "coupon", "replayed"], "properties": { "id": { "type": "integer" }, "won": { "type": "boolean" }, "createdAt": { "type": "string", "format": "date-time" }, "coupon": { "oneOf": [{ "$ref": "#/components/schemas/Coupon" }, { "type": "null" }] }, "replayed": { "type": "boolean" } } },
+      "Campaign": { "type": "object", "required": ["active", "rules", "prizes", "availableStock", "publicUrl"], "properties": { "active": { "type": "boolean" }, "rules": { "type": "object", "required": ["interval", "expiryDays", "cooldownEnabled", "cooldownHours", "dailyCodeEnabled"], "properties": { "interval": { "type": "integer" }, "expiryDays": { "type": "integer" }, "cooldownEnabled": { "type": "boolean" }, "cooldownHours": { "type": "integer" }, "dailyCodeEnabled": { "type": "boolean" } } }, "prizes": { "type": "array", "items": { "$ref": "#/components/schemas/Prize" } }, "availableStock": { "type": "integer" }, "publicUrl": { "type": "string", "format": "uri" }, "promotionContact": { "type": "string" } } }
+    }
+  }
+}

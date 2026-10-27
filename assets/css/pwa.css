@@ -1,0 +1,18 @@
+body { margin: 0; min-height: 100dvh; background: radial-gradient(ellipse at 85% 20%, #23351977, transparent 65%), #0b100d; }
+.install-shell { width: min(960px, calc(100% - 36px)); margin: auto; padding-block: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-bottom)); }
+.install-header { display: flex; align-items: center; justify-content: space-between; padding-block: .5rem 1.5rem; border-bottom: 1px solid var(--line); }
+.install-logo { width: 90px; height: 54px; object-fit: cover; background: #f3f4e9; border-radius: 8px; }
+.install-main { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: start; padding-block: 2rem; }
+.install-main h1 { margin: 0 0 1rem; font-size: clamp(2rem, 4vw, 3rem); line-height: 1.1; }
+.install-main p { color: var(--muted); font-size: .875rem; line-height: 1.8; }
+.app-icon { width: 88px; height: 88px; border-radius: 20px; margin-bottom: 1.5rem; }
+.install-platform { padding: 1.2rem; margin: 0 0 1rem; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); }
+.install-platform h2 { margin: 0 0 .8rem; font-size: 1.3rem; }
+.install-platform ol { margin-bottom: 0; padding-left: 1.2rem; color: var(--muted); font-size: .8rem; line-height: 1.9; }
+.install-platform li { margin-bottom: .4rem; }
+.install-warning { padding: .85rem 1rem; border: 1px solid #d9b46a55; border-radius: 10px; color: var(--gold) !important; background: #bb871510; }
+.install-footer { border-top: 1px solid var(--line); padding-block: 1rem; color: var(--muted); font-size: .7rem; }
+.offline-main { width: min(480px, calc(100% - 36px)); margin: 10dvh auto; text-align: center; }
+.offline-main h1 { font-size: 2.2rem; line-height: 1.15; }
+.offline-main p { color: var(--muted); font-size: .9rem; line-height: 1.8; }
+@media (max-width: 650px) { .install-main { grid-template-columns: 1fr; gap: 1rem; } .install-main h1 { font-size: 2.1rem; } }

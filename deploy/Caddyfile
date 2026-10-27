@@ -1,0 +1,10 @@
+{
+    email {$TLS_EMAIL}
+    admin off
+}
+
+{$DOMAIN} {
+    encode zstd gzip
+    reverse_proxy app:8080
+    header -Server
+}

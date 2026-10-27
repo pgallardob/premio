@@ -1,0 +1,33 @@
+{
+  "name": "los-olivos-premio",
+  "version": "0.2.0",
+  "private": true,
+  "description": "A mobile-first QR rewards experience for Comercializadora Los Olivos.",
+  "type": "module",
+  "engines": {
+    "node": ">=24.22.1"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.js",
+    "start": "node --env-file-if-exists=.env server/index.js",
+    "dev": "node --env-file-if-exists=.env --watch server/index.js",
+    "check": "node scripts/check.js",
+    "test": "node --test --test-concurrency=1",
+    "test:browser": "node scripts/browser-check.js",
+    "test:pwa": "node scripts/pwa-check.js",
+    "build:pages": "node scripts/build-pages.js",
+    "test:pages": "node scripts/pages-check.js",
+    "check:publish": "node --env-file-if-exists=.env scripts/check-publish.js",
+    "production:check": "node --env-file-if-exists=.env scripts/production-check.js",
+    "verify": "npm run check && npm test"
+  },
+  "dependencies": {
+    "@fontsource/manrope": "5.2.8",
+    "@fontsource/syne": "5.2.6",
+    "@picocss/pico": "2.1.1",
+    "qrcode": "1.5.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0"
+  }
+}

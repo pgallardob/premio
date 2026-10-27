@@ -1,0 +1,44 @@
+{
+  "name": "los-olivos-premio",
+  "services": {
+    "app": {
+      "image": "los-olivos-premio:0.2.0",
+      "build": { "context": ".", "dockerfile": "Dockerfile" },
+      "env_file": [".env.production"],
+      "environment": { "NODE_ENV": "production", "HOST": "0.0.0.0", "PORT": "8080", "DATA_DIR": "/app/data", "BACKUP_DIR": "/app/backups", "TRUSTED_PROXIES": "172.30.24.2/32" },
+      "volumes": ["app-data:/app/data", "app-backups:/app/backups"],
+      "read_only": true,
+      "tmpfs": ["/tmp:rw,noexec,nosuid,size=16m"],
+      "init": true,
+      "restart": "unless-stopped",
+      "cap_drop": ["ALL"],
+      "security_opt": ["no-new-privileges:true"],
+      "networks": { "backend": { "ipv4_address": "172.30.24.3" } },
+      "healthcheck": { "test": ["CMD", "node", "scripts/healthcheck.js"], "interval": "30s", "timeout": "5s", "start_period": "15s", "retries": 3 }
+    },
+    "maintenance": {
+      "profiles": ["maintenance"],
+      "image": "los-olivos-premio:0.2.0",
+      "environment": { "DATA_DIR": "/app/data", "BACKUP_DIR": "/app/backups" },
+      "volumes": ["app-data:/app/data", "app-backups:/app/backups"],
+      "network_mode": "none",
+      "read_only": true,
+      "init": true,
+      "cap_drop": ["ALL"],
+      "security_opt": ["no-new-privileges:true"],
+      "command": ["node", "scripts/backup.js"]
+    },
+    "web": {
+      "image": "caddy:2.11.7-alpine",
+      "environment": { "DOMAIN": "${DOMAIN:?Configure DOMAIN}", "TLS_EMAIL": "${TLS_EMAIL:?Configure TLS_EMAIL}" },
+      "ports": ["80:80", "443:443", "443:443/udp"],
+      "volumes": ["./deploy/Caddyfile:/etc/caddy/Caddyfile:ro", "caddy-data:/data", "caddy-config:/config"],
+      "depends_on": { "app": { "condition": "service_healthy" } },
+      "restart": "unless-stopped",
+      "security_opt": ["no-new-privileges:true"],
+      "networks": { "backend": { "ipv4_address": "172.30.24.2" }, "public": {} }
+    }
+  },
+  "networks": { "backend": { "internal": true, "ipam": { "config": [{ "subnet": "172.30.24.0/24" }] } }, "public": {} },
+  "volumes": { "app-data": {}, "app-backups": {}, "caddy-data": {}, "caddy-config": {} }
+}

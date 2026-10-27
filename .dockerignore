@@ -1,0 +1,11 @@
+node_modules
+.env
+.env.*
+ellocal.txt
+data
+backups
+artifacts
+release
+.git
+*.log
+laidea.md
