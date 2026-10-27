@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="440" viewBox="0 0 360 440">
+  <defs><linearGradient id="cup"><stop stop-color="#a9a993"/><stop offset=".2" stop-color="#e8e5cd"/><stop offset=".5" stop-color="#f6f0d7"/><stop offset=".85" stop-color="#d9d8bd"/><stop offset="1" stop-color="#a4ab91"/></linearGradient><linearGradient id="sleeve"><stop stop-color="#2c432d"/><stop offset=".25" stop-color="#54704a"/><stop offset=".7" stop-color="#3a5837"/><stop offset="1" stop-color="#243b29"/></linearGradient><linearGradient id="lid" x2="0" y2="1"><stop stop-color="#54614a"/><stop offset=".4" stop-color="#273c2b"/><stop offset=".55" stop-color="#46583c"/><stop offset="1" stop-color="#172a1e"/></linearGradient></defs>
+  <ellipse cx="180" cy="397" rx="78" ry="10" fill="#000" opacity=".16"/>
+  <path d="M144 88c-20-20 15-31 2-52M181 78c-19-20 15-28 3-53M214 86c-15-17 11-28 3-41" stroke="#e3e8cc" opacity=".3" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <path d="M91 132h178l-24 236q-64 23-129 0Z" fill="url(#cup)"/>
+  <ellipse cx="180" cy="369" rx="64" ry="13" fill="#a6b096"/>
+  <path d="m98 184 164 1-11 118q-71 24-142-1Z" fill="url(#sleeve)"/>
+  <path d="M100 188q80 15 161 0M109 300q71 23 142 1" stroke="#6c8655" fill="none"/>
+  <path d="M82 129q98-27 196 0l-1 21q-97 24-194-1Z" fill="url(#lid)"/>
+  <path d="m92 129 7-29q80-25 162 0l9 29q-89 19-178 0Z" fill="url(#lid)"/>
+  <ellipse cx="180" cy="101" rx="81" ry="13" fill="#4d6145"/>
+  <ellipse cx="180" cy="100" rx="69" ry="8" fill="#3a5038"/>
+  <path d="M211 101q22-6 30 0" stroke="#182e1e" stroke-width="5" stroke-linecap="round"/>
+  <text x="180" y="214" text-anchor="middle" font-family="Arial,sans-serif" font-size="8" letter-spacing="2" fill="#d9e2b9">LOS OLIVOS</text>
+  <text x="180" y="246" text-anchor="middle" font-family="Arial,sans-serif" font-size="26" font-weight="700" letter-spacing="-1" fill="#e5e5be">SIN</text>
+  <text x="180" y="271" text-anchor="middle" font-family="Arial,sans-serif" font-size="26" font-weight="700" letter-spacing="-1" fill="#e5e5be">APURO.</text>
+  <text x="180" y="291" text-anchor="middle" font-family="Arial,sans-serif" font-size="6" letter-spacing="1.5" fill="#c6d2a4">UN MOMENTO PARA TI</text>
+  <path d="m116 152 18 199" fill="none" stroke="#fff" opacity=".1" stroke-width="12"/>
+  <path d="M162 334c8-14 16-16 29-15-3 16-11 21-23 19m-8 5 20-16" fill="none" stroke="#6b7f53" stroke-width="2" stroke-linecap="round"/>
+</svg>
