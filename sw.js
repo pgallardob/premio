@@ -1,4 +1,4 @@
-const CACHE = 'olivos-premio-pages-0.2.0';
+const CACHE = 'olivos-premio-pages-0.2.1';
 const SHELL = [
   '/premio/offline.html', '/premio/assets/css/tokens.css', '/premio/assets/css/pwa.css',
   '/premio/assets/images/app/icon-192.png', '/premio/img/logoolivos.jpeg',
@@ -17,7 +17,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const request = event.request;
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin || request.method !== 'GET' || url.pathname.startsWith('/premio/api/') || url.pathname === '/premio/healthz') return;
+  if (url.origin !== self.location.origin || request.method !== 'GET' || url.pathname.startsWith('/api/') || url.pathname === '/premio/healthz') return;
   if (request.mode === 'navigate') {
     event.respondWith(fetch(request).catch(() => caches.match('/premio/offline.html')));
     return;

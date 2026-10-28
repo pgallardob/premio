@@ -5,7 +5,7 @@ import { deployment } from './deployment.js';
 $('#print-poster').disabled = true;
 $('#print-poster').addEventListener('click', () => window.print());
 try {
-  const status = deployment.backendAvailable ? await request('/premio/api/status') : deployment.staticCampaign;
+  const status = deployment.backendAvailable ? await request('/api/status') : deployment.staticCampaign;
   updateRules(status.rules);
   $('#poster-url').textContent = status.publicUrl;
   const warnings = [];

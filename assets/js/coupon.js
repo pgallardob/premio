@@ -9,7 +9,7 @@ let saving;
 
 function rememberCoupon() {
   if (savedInWallet) return Promise.resolve();
-  saving ??= request('/premio/api/wallet/coupons', { method: 'POST', body: { token } })
+  saving ??= request('/api/wallet/coupons', { method: 'POST', body: { token } })
     .then(() => { savedInWallet = true; }).finally(() => { saving = undefined; });
   return saving;
 }

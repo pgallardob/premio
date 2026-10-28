@@ -1,5 +1,8 @@
 export const deployment = Object.freeze({
-  "backendAvailable": false,
+  "backendAvailable": true,
+  "apiBaseUrl": "https://br-polished-violet-b4dyd4nr-api.compute.c-6.us-east-2.aws.neon.tech",
+  "bearerTransport": true,
+  "adminRefreshMs": 15000,
   "staticCampaign": {
     "active": false,
     "availableStock": 0,

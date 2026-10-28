@@ -1,4 +1,4 @@
-import { request } from './api.js';
+import { request, apiUrl } from './api.js';
 
 export const $ = (selector, scope = document) => scope.querySelector(selector);
 export const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
@@ -91,13 +91,14 @@ export function renderFramedCoupon(coupon, ids) {
   document.getElementById(ids.name).textContent = coupon.prize.name;
   document.getElementById(ids.code).textContent = coupon.code;
   document.getElementById(ids.expiry).textContent = `Vence ${formatDate(coupon.expiresAt, true)} · Un solo canje`;
-  document.getElementById(ids.qr).src = `/api/coupons/${coupon.token}/qr`;
+  document.getElementById(ids.qr).src = apiUrl(`/api/coupons/${coupon.token}/qr`);
 }
 
 export function couponUrl(coupon) { return `${location.origin}/premio/cupon.html#${coupon.token}`; }
 
 async function loadImage(source) {
   const image = new Image();
+  if (new URL(source, location.href).origin !== location.origin) image.crossOrigin = 'anonymous';
   image.src = source;
   await image.decode();
   return image;
@@ -118,7 +119,7 @@ function wrapCanvasText(context, text, x, y, maxWidth, lineHeight) {
 
 export async function downloadCoupon(coupon) {
   coupon = await request(`/api/coupons/${coupon.token}`);
-  const [frame, qr] = await Promise.all([loadImage('/premio/img/sinimg.jpeg'), loadImage(`/api/coupons/${coupon.token}/qr`)]);
+  const [frame, qr] = await Promise.all([loadImage('/premio/img/sinimg.jpeg'), loadImage(apiUrl(`/api/coupons/${coupon.token}/qr`))]);
   await document.fonts.ready;
   const canvas = document.createElement('canvas');
   canvas.width = 768;

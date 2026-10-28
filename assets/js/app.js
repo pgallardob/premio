@@ -49,7 +49,7 @@ function renderPrizes(prizes) {
 
 async function loadCampaign() {
   try {
-    campaign = deployment.backendAvailable ? await request('/premio/api/status') : deployment.staticCampaign;
+    campaign = deployment.backendAvailable ? await request('/api/status') : deployment.staticCampaign;
     updateRules(campaign.rules);
     $('#promotion-contact').hidden = !campaign.promotionContact;
     $('#promotion-contact').textContent = campaign.promotionContact ? `Consultas sobre la promoción: ${campaign.promotionContact}` : '';
@@ -60,7 +60,7 @@ async function loadCampaign() {
     if (!deployment.backendAvailable) $('#participation-guidance').textContent = 'Servidor pendiente: esta publicación todavía no registra participaciones.';
     $('#daily-code-field').hidden = !campaign.rules.dailyCodeEnabled;
     $('#daily-code').required = campaign.rules.dailyCodeEnabled;
-    $('#cooldown-explanation').textContent = 'Puedes participar una vez cada 24 horas desde este navegador. El límite se cuenta desde tu última participación, no desde medianoche. Borrar cookies puede eludir este control básico: no es una verificación de identidad.';
+    $('#cooldown-explanation').textContent = 'Puedes participar una vez cada 24 horas desde este navegador. El límite se cuenta desde tu última participación, no desde medianoche. Borrar los datos del navegador puede eludir este control básico: no es una verificación de identidad.';
     return true;
   } catch (error) {
     campaign = undefined;
@@ -76,7 +76,7 @@ async function loadCampaign() {
 async function refreshWallet() {
   const content = $('#wallet-content');
   try {
-    const { coupons } = await request('/premio/api/wallet');
+    const { coupons } = await request('/api/wallet');
     $('#wallet-count').textContent = coupons.length;
     $('#wallet-count').hidden = coupons.length === 0;
     if (!coupons.length) {
@@ -122,7 +122,7 @@ $('#wallet-recovery-form').addEventListener('submit', async (event) => {
     if (link.origin !== location.origin || link.pathname !== '/premio/cupon.html' || link.username || link.password || !/^#[a-f0-9]{64}$/.test(link.hash)) {
       throw new Error('Utiliza el enlace privado completo de un cupón de Los Olivos, no su código de canje.');
     }
-    await request('/premio/api/wallet/coupons', { method: 'POST', body: { token: link.hash.slice(1) } });
+    await request('/api/wallet/coupons', { method: 'POST', body: { token: link.hash.slice(1) } });
     $('#wallet-private-link').value = '';
     await refreshWallet();
     message($('#wallet-recovery-message'), 'Cupón guardado. Su estado y vencimiento no cambian.', 'success');
@@ -182,7 +182,7 @@ $('#participation-form').addEventListener('submit', async (event) => {
   pendingKey ??= uniqueRequestKey();
   try { sessionStorage.setItem('olivos_pending_participation', pendingKey); } catch { /* In-memory retries remain idempotent. */ }
   try {
-    const result = await request('/premio/api/participations', {
+    const result = await request('/api/participations', {
       method: 'POST', headers: { 'Idempotency-Key': pendingKey },
       body: campaign.rules.dailyCodeEnabled ? { dailyCode: $('#daily-code').value.trim() } : {},
     });

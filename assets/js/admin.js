@@ -9,7 +9,7 @@ let loading;
 let settingsDirty = false;
 let selectedCoupon;
 let redemptionNeedsRecheck = false;
-const refreshInterval = 3000;
+const refreshInterval = deployment.adminRefreshMs ?? 3000;
 let refreshTimer;
 let nextRefreshDelay = refreshInterval;
 let refreshNotBefore = 0;
@@ -19,6 +19,21 @@ let lastCoupons = '';
 const inventoryEdits = new Set();
 const panelNames = { overview: 'Vista general', coupons: 'Cupones y canjes', inventory: 'Los premios', settings: 'La experiencia' };
 initializeDialogs();
+
+$('#panel-coupons a[download]').addEventListener('click', async (event) => {
+  event.preventDefault();
+  try {
+    const blob = await request('/api/admin/export', { responseType: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const link = element('a');
+    link.href = url;
+    link.download = 'los-olivos-cupones.csv';
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) { toast(error.message); }
+});
 
 function showLogin(text = '') {
   signedIn = false;
@@ -252,7 +267,7 @@ $('#settings-form').addEventListener('submit', async (event) => {
   const code = $('#setting-daily-code').value.trim();
   if (code) data.dailyCode = code;
   try {
-    await request('/premio/api/admin/settings', { method: 'PATCH', body: data });
+    await request('/api/admin/settings', { method: 'PATCH', body: data });
     settingsDirty = false;
     lastSettings = '';
     $('#setting-daily-code').value = '';
@@ -272,7 +287,7 @@ function loadDashboard({ background = false } = {}) {
   }
   loading = (async () => {
     try {
-      const snapshot = await request('/premio/api/admin/dashboard');
+      const snapshot = await request('/api/admin/dashboard');
       if (!signedIn) return;
       dashboard = snapshot;
       renderOverview();
@@ -401,7 +416,7 @@ $('#login-form').addEventListener('submit', async (event) => {
   busy($('#login-button'), true);
   message($('#login-message'));
   try {
-    const session = await request('/premio/api/admin/login', { method: 'POST', body: { password: $('#admin-password').value } });
+    const session = await request('/api/admin/login', { method: 'POST', body: { password: $('#admin-password').value } });
     $('#admin-password').value = '';
     await enterWorkspace(session);
   } catch (error) { message($('#login-message'), error.message, 'error'); }
@@ -410,7 +425,7 @@ $('#login-form').addEventListener('submit', async (event) => {
 $('#logout-button').addEventListener('click', async () => {
   busy($('#logout-button'), true);
   try {
-    await request('/premio/api/admin/logout', { method: 'POST', body: {} });
+    await request('/api/admin/logout', { method: 'POST', body: {} });
     showLogin();
     $('#admin-password').focus();
   } catch (error) { handleError(error); }
@@ -418,7 +433,7 @@ $('#logout-button').addEventListener('click', async () => {
 });
 
 if (deployment.backendAvailable) {
-  try { await enterWorkspace(await request('/premio/api/admin/session')); }
+  try { await enterWorkspace(await request('/api/admin/session')); }
   catch (error) { if (error.status === 401) showLogin(); else showLogin(error.message); }
 } else {
   showLogin(deployment.backendNotice);
