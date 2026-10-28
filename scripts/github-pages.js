@@ -44,16 +44,22 @@ if (command === 'inspect') {
   try { existing = await api('/pages'); } catch (error) { if (error.status !== 404) throw error; }
   const pages = await api('/pages', { method: existing ? 'PUT' : 'POST', body: { build_type: 'legacy', source: { branch: 'gh-pages', path: '/' } } });
   console.log(JSON.stringify({ url: pages?.html_url, source: pages?.source, configured: true }, null, 2));
+} else if (command === 'latest') {
+  const build = await api('/pages/builds/latest');
+  console.log(JSON.stringify({ status: build.status, commit: build.commit, createdAt: build.created_at, updatedAt: build.updated_at, error: build.error?.message }, null, 2));
 } else if (command === 'build') {
   console.log(JSON.stringify(await api('/pages/builds', { method: 'POST' }), null, 2));
 } else if (command === 'wait') {
+  const expected = (await api('/git/ref/heads/gh-pages')).object.sha;
   let previous;
   for (let attempt = 0; attempt < 48; attempt += 1) {
     const pages = await api('/pages');
-    if (pages.status !== previous) { console.log(`Pages: ${pages.status ?? 'pending'}`); previous = pages.status; }
-    if (pages.status === 'built') { console.log(JSON.stringify({ url: pages.html_url, source: pages.source, status: pages.status }, null, 2)); break; }
-    if (pages.status === 'errored') throw new Error('GitHub Pages reports a failed build. Inspect the repository Pages build.');
+    const build = await api('/pages/builds/latest');
+    const status = build.commit === expected ? build.status : 'pending';
+    if (status !== previous) { console.log(`Pages: ${status ?? 'pending'}`); previous = status; }
+    if (status === 'built') { console.log(JSON.stringify({ url: pages.html_url, source: pages.source, status, commit: build.commit }, null, 2)); break; }
+    if (status === 'errored' && !/cancel|supersed/i.test(build.error?.message ?? '')) throw new Error(`GitHub Pages build failed: ${build.error?.message ?? 'Inspect the latest build.'}`);
     if (attempt === 47) throw new Error('GitHub Pages is still pending; publication is not yet verified.');
     await delay(5000);
   }
-} else throw new Error('Use inspect, enable, build or wait.');
+} else throw new Error('Use inspect, enable, latest, build or wait.');
