@@ -22,10 +22,10 @@ Los nombres y la disponibilidad de los menús dependen de la versión del navega
 
 - HTTPS con certificado confiable y dirección accesible desde el teléfono.
 - Iconos 192/512, icono adaptable y Apple Touch Icon incluidos.
-- Manifiesto con alcance raíz y modo `standalone`.
+- Manifiesto con el alcance de la publicación (`/premio/` en GitHub Pages, `/` en Node) y modo `standalone`.
 - Servidor disponible y almacenamiento persistente.
 
-`http://localhost:4173` se refiere al propio teléfono cuando se abre allí. Por eso **la instalación real todavía no puede entregarse como un enlace público mientras falte publicar el servidor**. No se ha creado una ficha en Google Play ni App Store.
+La dirección pública es `https://pgallardob.github.io/premio/instalar.html`; su API está conectada a Neon. No necesita mantener encendida la computadora. La campaña permanece pausada hasta completar la configuración del negocio. `http://localhost:4173` se refiere al propio teléfono cuando se abre allí; no use esa dirección para instalar. No se ha creado una ficha en Google Play ni App Store.
 
 ## Conexión y privacidad
 

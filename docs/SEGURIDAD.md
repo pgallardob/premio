@@ -1,19 +1,19 @@
 # Un premio se confirma en el servidor, no en una captura
 
-La aplicación tiene controles concretos de consistencia y acceso. La fase manual anterior se cerró y sus registros se eliminaron. Antes de utilizarla con clientes reales se necesitan HTTPS público, credenciales nuevas, inventario confirmado y revisión de bases/privacidad.
+La aplicación tiene controles concretos de consistencia y acceso. La publicación Pages + Neon ya utiliza HTTPS y credenciales nuevas; permanece pausada hasta confirmar inventario, bases/privacidad, contacto y respaldos. La fase manual anterior se cerró y sus registros se eliminaron.
 
 ## Controles presentes
 
 | Riesgo | Control |
 |---|---|
-| Dos ganadores por una carrera | Una cola de transacciones y un único escritor. |
+| Dos ganadores por una carrera | Bloqueo transaccional de filas en Neon; cola y escritor único en el despliegue con archivo. |
 | Reintento por mala conexión | Clave idempotente persistida por navegador. |
 | Cupones sin unidades | Reserva al emitir; liberación solo por vencimiento. |
 | Doble entrega | Transición atómica de vigente a canjeado. |
 | Acceso administrativo | Contraseña derivada con scrypt y sesión aleatoria. |
-| Robo de sesión mediante JavaScript | Cookie `HttpOnly`, `SameSite=Strict`; `Secure` en HTTPS. |
+| Credenciales de sesión | Node usa cookie `HttpOnly`, `SameSite=Strict` y `Secure` en HTTPS. Neon usa bearer por pestaña, CSP estricta y revocación persistente; Web Storage no tiene la protección `HttpOnly`. |
 | Mutación desde otro origen | Validación de `Origin`, JSON y token CSRF de sesión. |
-| Fuerza bruta | Límite de intentos por dirección IP. |
+| Fuerza bruta | Límite persistente global en Neon; límite por IP confiable en Node. |
 | Código inyectado en HTML | CSP sin `unsafe-inline`; renderizado mediante nodos y `textContent`. |
 | Fuga del archivo de datos | Lista explícita de rutas públicas; `.env`, `data/` y `server/` no se sirven. |
 | Enlaces privados enviados como referencia | Política `no-referrer` y token en fragmento del enlace. |
@@ -40,7 +40,7 @@ No utilice modo clúster, réplicas múltiples o un disco efímero para el JSON.
 
 Pages puede servir HTML, CSS y JavaScript, pero no ejecutar este servidor ni escribir su contador central. Guardar datos en `localStorage` produciría contadores distintos por teléfono y permitiría falsificar premios. Por esa razón no se ofrece como un despliegue completo ficticio.
 
-Para usar Pages más adelante se debe desplegar primero la API, adaptar la configuración de cliente y diseñar explícitamente CORS, cookies y protección CSRF entre orígenes. Esa publicación no se ha realizado.
+La publicación actual conecta Pages con Neon mediante CORS de origen exacto, identificadores firmados y sesiones bearer con CSRF. No utiliza cookies de terceros ni guarda el contador en el teléfono. Los tokens de Web Storage pueden ser leídos por una vulnerabilidad XSS: no deben añadirse scripts externos sin revisión. Consulte [los límites de Neon](NEON.md).
 
 ## Antes de abrir al público
 

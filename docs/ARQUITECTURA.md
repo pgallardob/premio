@@ -6,6 +6,8 @@ La PWA agrega manifiesto, iconos, instalación guiada y un service worker limita
 
 ## Recorrido principal
 
+La publicación de GitHub Pages usa **Neon Functions → PostgreSQL**. El mismo enrutador y las mismas reglas se reutilizan mediante un adaptador Fetch. El documento JSONB se bloquea con `SELECT ... FOR UPDATE`; las sesiones y los límites también son persistentes. Consulte [Neon](NEON.md) para CORS, tokens de navegador y cuotas gratuitas. El diagrama siguiente describe la alternativa Node con archivo, que sigue disponible para instalaciones propias.
+
 ```mermaid
 flowchart LR
   A[QR en el local] --> B[HTML + JavaScript + Pico.css]
