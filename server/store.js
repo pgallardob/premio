@@ -2,7 +2,7 @@ import { mkdir, open, readFile, rename, unlink, writeFile } from 'node:fs/promis
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
-function initialState(catalog, defaults = {}) {
+export function initialState(catalog, defaults = {}) {
   return {
     version: 1,
     settings: {

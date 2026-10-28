@@ -1,6 +1,6 @@
 {
   "name": "los-olivos-premio",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "A mobile-first QR rewards experience for Comercializadora Los Olivos.",
   "type": "module",
@@ -17,6 +17,10 @@
     "test:pwa": "node scripts/pwa-check.js",
     "build:pages": "node scripts/build-pages.js",
     "test:pages": "node scripts/pages-check.js",
+    "neon:inspect": "node scripts/neon-tools.js inspect",
+    "neon:migrate": "node scripts/neon-tools.js migrate",
+    "test:neon": "node scripts/neon-tools.js test",
+    "neon:deploy": "node scripts/neon-tools.js deploy",
     "check:publish": "node --env-file-if-exists=.env scripts/check-publish.js",
     "production:check": "node --env-file-if-exists=.env scripts/production-check.js",
     "verify": "npm run check && npm test"
@@ -25,9 +29,12 @@
     "@fontsource/manrope": "5.2.8",
     "@fontsource/syne": "5.2.6",
     "@picocss/pico": "2.1.1",
+    "pg": "8.23.1",
     "qrcode": "1.5.4"
   },
   "devDependencies": {
-    "@playwright/test": "^1.63.0"
+    "@neon/config": "1.9.5",
+    "@playwright/test": "^1.63.0",
+    "esbuild": "0.28.2"
   }
 }
