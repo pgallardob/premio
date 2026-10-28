@@ -60,7 +60,7 @@ async function loadCampaign() {
     if (!deployment.backendAvailable) $('#participation-guidance').textContent = 'Servidor pendiente: esta publicación todavía no registra participaciones.';
     $('#daily-code-field').hidden = !campaign.rules.dailyCodeEnabled;
     $('#daily-code').required = campaign.rules.dailyCodeEnabled;
-    $('#cooldown-explanation').textContent = 'Puedes participar una vez cada 24 horas desde este navegador. El límite se cuenta desde tu última participación, no desde medianoche. Borrar cookies puede eludir este control básico: no es una verificación de identidad.';
+    $('#cooldown-explanation').textContent = 'Puedes participar una vez cada 24 horas desde este navegador. El límite se cuenta desde tu última participación, no desde medianoche. Borrar los datos del navegador puede eludir este control básico: no es una verificación de identidad.';
     return true;
   } catch (error) {
     campaign = undefined;

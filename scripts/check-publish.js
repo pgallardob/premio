@@ -4,6 +4,15 @@ import assert from 'node:assert/strict';
 
 const names = execFileSync('git', ['diff', '--cached', '--name-only', '--diff-filter=ACMR', '-z'], { encoding: 'utf8' }).split('\0').filter(Boolean);
 const knownSecrets = [process.env.ADMIN_PASSWORD_HASH, process.env.DEVICE_SECRET, process.env.GH_TOKEN, process.env.GITHUB_TOKEN].filter((value) => value?.length >= 16);
+if (process.env.NEON_CONFIG_DIR) {
+  const { join } = await import('node:path');
+  const environment = await readFile(join(process.env.NEON_CONFIG_DIR, 'premio-deployment.env'), 'utf8');
+  for (const line of environment.split(/\r?\n/)) {
+    const index = line.indexOf('=');
+    if (index > 0 && /PASSWORD|SECRET|TOKEN/.test(line.slice(0, index))) knownSecrets.push(line.slice(index + 1));
+  }
+  knownSecrets.push((await readFile(join(process.env.NEON_CONFIG_DIR, 'premio-admin-password.txt'), 'utf8')).trim());
+}
 try {
   const local = await readFile('ellocal.txt', 'utf8');
   const password = local.match(/Contraseña local:\s*(\S+)/u)?.[1];

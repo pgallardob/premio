@@ -9,7 +9,7 @@ let loading;
 let settingsDirty = false;
 let selectedCoupon;
 let redemptionNeedsRecheck = false;
-const refreshInterval = 3000;
+const refreshInterval = deployment.adminRefreshMs ?? 3000;
 let refreshTimer;
 let nextRefreshDelay = refreshInterval;
 let refreshNotBefore = 0;
@@ -19,6 +19,21 @@ let lastCoupons = '';
 const inventoryEdits = new Set();
 const panelNames = { overview: 'Vista general', coupons: 'Cupones y canjes', inventory: 'Los premios', settings: 'La experiencia' };
 initializeDialogs();
+
+$('#panel-coupons a[download]').addEventListener('click', async (event) => {
+  event.preventDefault();
+  try {
+    const blob = await request('/api/admin/export', { responseType: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const link = element('a');
+    link.href = url;
+    link.download = 'los-olivos-cupones.csv';
+    document.body.append(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) { toast(error.message); }
+});
 
 function showLogin(text = '') {
   signedIn = false;

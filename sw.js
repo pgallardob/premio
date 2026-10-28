@@ -1,4 +1,4 @@
-const CACHE = 'olivos-public-0.2.0';
+const CACHE = 'olivos-public-0.2.1';
 const SHELL = [
   '/offline.html', '/assets/css/tokens.css', '/assets/css/pwa.css',
   '/assets/images/app/icon-192.png', '/img/logoolivos.jpeg',

@@ -2,13 +2,13 @@
 
 Repositorio: `https://github.com/pgallardob/premio`.
 
-La rama `main` conserva el código completo. La rama `gh-pages` contiene únicamente la interfaz compilada para `https://pgallardob.github.io/premio/`, incluidos recursos locales y PWA con alcance `/premio/`.
+La rama `main` conserva el código completo. La rama `gh-pages` contiene únicamente la interfaz compilada para `https://pgallardob.github.io/premio/`, incluidos recursos locales y PWA con alcance `/premio/`. La API puede conectarse a [Neon](NEON.md) mediante `PAGES_API_URL` al compilar.
 
 ## Límite funcional
 
-GitHub Pages no ejecuta Node.js ni escribe el contador central. Esta publicación **no registra participaciones, no verifica sesiones y no canjea cupones**. Los controles de negocio quedan deshabilitados y la web explica que falta conectar el servidor. No se publican respuestas simuladas de API ni contadores locales.
+GitHub Pages no ejecuta Node.js ni escribe el contador central. **Sin API configurada**, la publicación no registra participaciones, no verifica sesiones y no canjea cupones. Los controles de negocio quedan deshabilitados. Con `PAGES_API_URL`, las operaciones se envían al servidor real; nunca se publican respuestas simuladas de API ni contadores locales.
 
-La interfaz puede abrirse e instalarse mediante HTTPS. Para operar la promoción hace falta un backend real; el despliegue completo de una instancia sigue documentado en [Producción](PRODUCCION.md). No basta con cambiar una URL para habilitar cookies/CSRF entre orígenes: esa integración debe configurarse y verificarse expresamente.
+La interfaz puede abrirse e instalarse mediante HTTPS. La integración de Neon usa CORS restringido, tokens de navegador y sesiones con CSRF, sin depender de cookies de terceros. El despliegue completo de una instancia con cookies permanece documentado en [Producción](PRODUCCION.md).
 
 ## Compilar y verificar
 

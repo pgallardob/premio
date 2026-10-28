@@ -9,6 +9,8 @@ if (siteUrl.protocol !== 'https:' || siteUrl.search || siteUrl.hash || siteUrl.u
 if (!siteUrl.pathname.endsWith('/')) siteUrl.pathname += '/';
 const base = siteUrl.pathname;
 const prefix = (path) => `${base}${path.replace(/^\//, '')}`;
+const api = process.env.PAGES_API_URL ? new URL(process.env.PAGES_API_URL) : null;
+if (api && (api.protocol !== 'https:' || api.pathname !== '/' || api.username || api.password || api.search || api.hash)) throw new Error('PAGES_API_URL must be a credential-free HTTPS origin.');
 
 let exists = false;
 try { await access(output); exists = true; } catch (error) { if (error.code !== 'ENOENT') throw error; }
@@ -20,7 +22,7 @@ if (exists) {
   await rm(output, { recursive: true });
 }
 await mkdir(output, { recursive: true });
-await writeFile(join(output, '.pages-build.json'), JSON.stringify({ project: 'los-olivos-premio', site: siteUrl.href, backendAvailable: false }));
+await writeFile(join(output, '.pages-build.json'), JSON.stringify({ project: 'los-olivos-premio', site: siteUrl.href, backendAvailable: Boolean(api) }));
 
 const pages = ['index.html', 'admin.html', 'cupon.html', 'cartel.html', 'instalar.html', 'offline.html', 'manifest.webmanifest', 'sw.js'];
 for (const file of pages) await copyFile(join(root, file), join(output, file));
@@ -33,8 +35,8 @@ for (const family of ['manrope', 'syne']) {
 }
 await copyFile(join(root, 'node_modules/@picocss/pico/LICENSE.md'), join(output, 'vendor/licenses/pico-MIT.txt'));
 
-function relocate(text) {
-  return text.replace(/(["'])(\/(?!\/)[^"'\r\n]*)\1/g, (_, quote, path) => `${quote}${prefix(path)}${quote}`)
+function relocate(text, script = false) {
+  return text.replace(/(["'`])(\/(?!\/)[^"'`\r\n]*)\1/g, (_, quote, path) => `${quote}${script && path.startsWith('/api/') ? path : prefix(path)}${quote}`)
     .replaceAll('${location.origin}/', `\${location.origin}${base}`);
 }
 async function transform(directory) {
@@ -42,7 +44,12 @@ async function transform(directory) {
     const file = join(directory, entry.name);
     if (entry.isDirectory()) await transform(file);
     else if (['.html', '.css', '.js', '.webmanifest'].includes(extname(file))) {
-      let text = relocate(await readFile(file, 'utf8'));
+      let text = relocate(await readFile(file, 'utf8'), extname(file) === '.js');
+      if (extname(file) === '.html') {
+        const remote = api ? ` ${api.origin}` : '';
+        const policy = `default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:${remote}; font-src 'self'; connect-src 'self'${remote}; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'`;
+        text = text.replace('<head>', `<head>\n<meta http-equiv="Content-Security-Policy" content="${policy}">`);
+      }
       if (entry.name === 'sw.js') text = text.replaceAll('olivos-public-', 'olivos-premio-pages-');
       if (entry.name === 'cartel.html') text = text.replaceAll(prefix('/api/campaign/qr'), prefix('/assets/images/campaign-qr.png'));
       await writeFile(file, text);
@@ -57,9 +64,9 @@ const campaign = {
   rules: { interval: 20, expiryDays: 5, cooldownEnabled: true, cooldownHours: 24, dailyCodeEnabled: false },
   prizes: catalog.map(({ initialStock, ...prize }) => ({ ...prize, image: prefix(prize.image), stock: 0 })),
 };
-const configuration = { backendAvailable: false, staticCampaign: campaign,
+const configuration = { backendAvailable: Boolean(api), apiBaseUrl: api?.origin ?? '', bearerTransport: Boolean(api), adminRefreshMs: 15_000, staticCampaign: campaign,
   backendNotice: 'GitHub Pages aloja esta web, pero todavía no tiene un servidor de premios conectado. No se registran participaciones ni se permiten canjes.' };
 await writeFile(join(output, 'assets/js/deployment.js'), `export const deployment = Object.freeze(${JSON.stringify(configuration, null, 2)});\n`);
 await writeFile(join(output, 'assets/images/campaign-qr.png'), await QRCode.toBuffer(siteUrl.href, { width: 512, margin: 2, errorCorrectionLevel: 'M' }));
 await writeFile(join(output, '.nojekyll'), '');
-console.log(JSON.stringify({ directory: output, site: siteUrl.href, backendAvailable: false, scope: base }, null, 2));
+console.log(JSON.stringify({ directory: output, site: siteUrl.href, backendAvailable: Boolean(api), apiBaseUrl: api?.origin ?? null, scope: base }, null, 2));
