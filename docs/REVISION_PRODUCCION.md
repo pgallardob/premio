@@ -20,7 +20,7 @@ La PWA está publicada en `https://pgallardob.github.io/premio/` y conectada a u
 
 ## Pendiente de información o verificación externa
 
-1. **Inventario real:** confirmar nombres/presentaciones y unidades disponibles en el local; no se cargaron premios ficticios.
+1. **Inventario real:** el propietario indicó 20 bebidas, 20 snacks y 20 cafés, pero pospuso la carga hasta la próxima sesión. Son cantidades acordadas, no stock ya aplicado; revisar el estado antes de cargarlas. No activar automáticamente ni crear premios ficticios.
 2. **Bases, privacidad y contacto:** completar datos reales, conservación/eliminación y revisión legal aplicable a la promoción en Chile.
 3. **Respaldo PostgreSQL externo y calendario:** configurarlos y probar restauración; los respaldos de archivos de Node no respaldan Neon.
 4. **Teléfonos físicos:** verificar Android, iPhone/Safari, QR impreso, entrega real y rechazo del segundo canje.

@@ -1,19 +1,34 @@
 # Operar Los Olivos desde el local
 
-La campaña limpia comienza pausada, sin registros y sin stock. Antes de abrir, confirme premios reales y complete la publicación HTTPS según [Producción](PRODUCCION.md).
+La web y la API ya están publicadas con HTTPS en GitHub Pages y Neon. La campaña limpia continúa pausada, sin participaciones, cupones ni stock cargado. Antes de abrir, complete los requisitos de [Neon](NEON.md). La guía de [Producción](PRODUCCION.md) describe la alternativa con servidor propio y archivo.
+
+## Próxima sesión: inventario acordado
+
+El 28 de octubre de 2026, el propietario indicó las siguientes cantidades y solicitó posponer su carga hasta la próxima sesión:
+
+| Premio | Identificador | Unidades acordadas para cargar |
+|---|---|---|
+| Bebida | `refreshment` | 20 |
+| Snack | `snack` | 20 |
+| Café | `coffee` | 20 |
+| **Total** | | **60** |
+
+**Pendiente, no aplicado.** No activar ni cargar estas cantidades automáticamente. Antes de hacerlo, consulte el inventario y las reservas actuales para no sobrescribir cambios posteriores. Los valores son unidades disponibles; una reserva vigente no debe contarse dos veces.
 
 ## Preparar la campaña
 
-1. Ingrese en `/admin.html` con su contraseña.
+1. Ingrese en [Administración](https://pgallardob.github.io/premio/admin.html) con la contraseña nueva de publicación.
 2. **Los premios:** cargue unidades reales disponibles, excluyendo reservas de cupones vigentes.
 3. **La experiencia:** confirme frecuencia y vigencia; configure el código del local si lo utilizará.
 4. Active **Campaña activa** cuando estén completos los requisitos.
 
 La protección de una participación cada 24 horas es obligatoria y no se puede desactivar. Identifica navegadores, no personas. El contador central sigue decidiendo el orden y el premio se selecciona entre tipos con stock.
 
+Mientras la campaña esté pausada o no haya existencias, los botones de participación permanecen deshabilitados. Para activar en producción también deben estar completos el contacto y la revisión de bases en la configuración privada de despliegue; cargar stock por sí solo no completa esos requisitos.
+
 ## Actualización del panel
 
-El panel consulta automáticamente cada tres segundos mientras está visible y al regresar a la pestaña. Las ediciones pendientes se conservan. El indicador muestra conexión y última actualización; no es necesario recargar manualmente.
+El panel publicado con Neon consulta cada 15 segundos mientras está visible y al regresar a la pestaña; la alternativa local utiliza tres segundos. Las ediciones pendientes se conservan. El indicador muestra conexión y última actualización; no es necesario recargar manualmente. Cierre el panel cuando no lo utilice para reducir consumo del plan gratuito.
 
 ## Confirmar un canje
 
@@ -34,6 +49,8 @@ Ante una interrupción de red, use **Volver a verificar el estado** antes de ent
 
 Ejemplo: diez unidades físicas con dos cupones vigentes equivalen a ocho unidades disponibles. El catálogo está en `config/prizes.json`; mantenga estables los identificadores de premios con historial. El stock inicial de nuevas instalaciones es cero.
 
+En Neon, el inventario vigente está en PostgreSQL y se modifica desde el panel. Cambiar `initialStock` en el catálogo no sustituye el stock de una instalación existente. Mantenga los valores iniciales seguros en cero; no cambie el código para aplicar las cantidades de esta campaña.
+
 ## Colección del cliente
 
 «Mis cupones» muestra el historial completo, incluidos canjeados y vencidos. Al abrir un enlace privado se guarda en ese navegador sin transferir el propietario ni permitir un segundo canje.
@@ -46,7 +63,9 @@ Admite entre 4 y 24 letras, números o guiones, sin distinguir mayúsculas. Expi
 
 ## Contraseña
 
-Con el servidor detenido:
+En Neon, use la contraseña de publicación conservada fuera del repositorio. Los cambios de credenciales requieren actualizar la configuración privada y volver a desplegar la API. Reiniciar una función no elimina sus sesiones persistidas; **Cerrar sesión** revoca el acceso de esa sesión.
+
+Los siguientes comandos corresponden únicamente al servidor local con archivo, no modifican Neon. Con ese servidor detenido:
 
 ```sh
 node scripts/setup.js --rotate-password
@@ -56,7 +75,9 @@ Para credenciales de publicación utilice `--file=.env.production`. El secreto d
 
 ## Respaldo y eliminación
 
-Los procedimientos seguros se describen en [Producción](PRODUCCION.md). El servidor debe estar detenido para obtener el bloqueo exclusivo. No copie un archivo mientras haya un escritor activo.
+La publicación de Neon necesita respaldo y restauración de PostgreSQL; su programación externa continúa pendiente. Los comandos de archivos no respaldan ni borran la base de Neon.
+
+Para la alternativa local, los procedimientos seguros se describen en [Producción](PRODUCCION.md). El servidor debe estar detenido para obtener el bloqueo exclusivo. No copie un archivo mientras haya un escritor activo.
 
 Para una eliminación total **expresamente autorizada** en una instalación local detenida:
 

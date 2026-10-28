@@ -57,6 +57,7 @@ Esta entrega es una **PWA**, no un APK, IPA ni una publicación en App Store/Goo
 
 ## Guías
 
+- [Estado actual y próxima sesión](docs/AVANCE.md)
 - [Revisión y pendientes de producción](docs/REVISION_PRODUCCION.md)
 - [Despliegue, respaldo y restauración](docs/PRODUCCION.md)
 - [Neon Functions, PostgreSQL y GitHub Pages](docs/NEON.md)
