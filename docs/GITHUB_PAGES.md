@@ -18,7 +18,7 @@ npm run build:pages
 npm run test:pages
 ```
 
-`dist-pages/` es un artefacto regenerable ignorado por Git. Las rutas HTML/CSS/JavaScript, el manifiesto y el worker se adaptan a la subcarpeta del proyecto. Los iconos, fuentes y licencias se copian localmente. El QR del cartel apunta al sitio publicado, pero la impresión comercial permanece bloqueada mientras no exista backend.
+`dist-pages/` es un artefacto regenerable ignorado por Git. Las rutas HTML/CSS/JavaScript, el manifiesto y el worker se adaptan a la subcarpeta del proyecto. Los módulos y estilos incluyen la versión del paquete en su URL para actualizar la app instalada; incremente esa versión al publicar cambios de interfaz. Los iconos, fuentes y licencias se copian localmente. El QR del cartel apunta al sitio publicado, pero la impresión comercial permanece bloqueada mientras no exista backend.
 
 ## Publicación
 

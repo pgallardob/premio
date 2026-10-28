@@ -4,6 +4,7 @@ import QRCode from 'qrcode';
 
 const root = resolve(import.meta.dirname, '..');
 const output = join(root, 'dist-pages');
+const version = JSON.parse(await readFile(join(root, 'package.json'), 'utf8')).version;
 const siteUrl = new URL(process.env.PAGES_SITE_URL ?? 'https://pgallardob.github.io/premio/');
 if (siteUrl.protocol !== 'https:' || siteUrl.search || siteUrl.hash || siteUrl.username || siteUrl.password) throw new Error('PAGES_SITE_URL must be a public HTTPS site URL.');
 if (!siteUrl.pathname.endsWith('/')) siteUrl.pathname += '/';
@@ -45,7 +46,11 @@ async function transform(directory) {
     if (entry.isDirectory()) await transform(file);
     else if (['.html', '.css', '.js', '.webmanifest'].includes(extname(file))) {
       let text = relocate(await readFile(file, 'utf8'), extname(file) === '.js');
+      if (extname(file) === '.js') {
+        text = text.replace(/(from\s+)(['"])(\.{1,2}\/[^'"\r\n]+\.js)\2/g, `$1$2$3?v=${version}$2`);
+      }
       if (extname(file) === '.html') {
+        text = text.replace(/((?:src|href)="[^"\r\n]+\.(?:js|css))"/g, `$1?v=${version}"`);
         const remote = api ? ` ${api.origin}` : '';
         const policy = `default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:${remote}; font-src 'self'; connect-src 'self'${remote}; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'`;
         text = text.replace('<head>', `<head>\n<meta http-equiv="Content-Security-Policy" content="${policy}">`);
