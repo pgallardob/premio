@@ -1,7 +1,7 @@
-import { request, uniqueRequestKey } from './api.js';
-import { $, $$, element, icon, message, busy, updateRules, openDialog, initializeDialogs, emptyState, statusChip, formatDate, renderFramedCoupon, couponUrl, downloadCoupon, toast } from './ui.js';
-import { announceParticipation } from './updates.js';
-import { deployment } from './deployment.js';
+import { request, uniqueRequestKey } from './api.js?v=0.2.1';
+import { $, $$, element, icon, message, busy, updateRules, openDialog, initializeDialogs, emptyState, statusChip, formatDate, renderFramedCoupon, couponUrl, downloadCoupon, toast } from './ui.js?v=0.2.1';
+import { announceParticipation } from './updates.js?v=0.2.1';
+import { deployment } from './deployment.js?v=0.2.1';
 
 let campaign;
 let submitting = false;

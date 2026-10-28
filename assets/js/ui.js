@@ -1,4 +1,4 @@
-import { request, apiUrl } from './api.js';
+import { request, apiUrl } from './api.js?v=0.2.1';
 
 export const $ = (selector, scope = document) => scope.querySelector(selector);
 export const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));

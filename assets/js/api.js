@@ -1,4 +1,4 @@
-import { deployment } from './deployment.js';
+import { deployment } from './deployment.js?v=0.2.1';
 
 let csrfToken = '';
 const remote = deployment.bearerTransport === true;
