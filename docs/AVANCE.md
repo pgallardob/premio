@@ -51,7 +51,9 @@ La validación presencial permanece activa y sin compra. No exigir ticket o pago
 
 ## Continuar con Instagram
 
-1. Identificar la cuenta del local y confirmar su tipo y la autorización oficial, una pregunta a la vez. El siguiente dato pendiente es su usuario `@`. No presentar todavía el seguimiento como verificado.
+Cuenta indicada por el propietario: [@comercializadora_los_olivos_](https://www.instagram.com/comercializadora_los_olivos_). El propietario informa que todavía no es profesional; la conversión no se ha realizado ni verificado desde la configuración autenticada.
+
+1. Completar la conversión a una cuenta profesional; para el local se recomienda **Empresa**. Según la [ayuda oficial](https://help.instagram.com/502981923235522), esta configuración tiene perfil público. El propietario debe iniciar sesión personalmente; no compartir contraseñas ni códigos de acceso por chat. Continuar una pregunta a la vez.
 2. Definir el contrato de verificación antes de implementar el requisito. La cuenta, aplicación Meta, permisos y credenciales todavía no están conectados.
 3. Revisar inventario y reservas antes de reponer; no repetir la carga inicial ni restaurar historial. Mantener pendientes las comprobaciones Android/iPhone físicas y un canje comercial de un solo uso.
 4. Configurar respaldo PostgreSQL externo, calendario y verificación de restauración.
