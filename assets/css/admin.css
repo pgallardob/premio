@@ -334,3 +334,5 @@ td .link-button { font-size: .6rem; min-height: 34px; color: var(--accent); whit
   .login-card > p:not(.eyebrow):not(.login-footnote) { margin-bottom: 1rem; }
   .login-footnote { margin-top: 1rem; }
 }
+.instagram-event { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .4rem 1rem; padding-block: .5rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .75rem; }
+#instagram-click-events { display: grid; gap: .5rem; }

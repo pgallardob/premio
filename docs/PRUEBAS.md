@@ -9,6 +9,7 @@ npm run check
 npm test
 npm run test:browser
 npm run test:visits
+npm run test:instagram
 npm run test:pwa
 ```
 
@@ -52,6 +53,12 @@ La suite adicional comprueba configuración pública segura, confianza explícit
 `npm run test:visits` ejecuta cinco recorridos adicionales en Google Chrome: revisión previa del propietario, solicitud adaptable, comparación del código y enlace QR, aprobación sin participación automática, recuperación de una respuesta perdida y cancelación/vencimiento. La pérdida de respuesta se produce después de ejecutar el servidor real aislado; la recuperación después de recargar y vencer la visita no genera una segunda entrada. Las capturas quedan en `artifacts/visits/`, fuera de Git.
 
 `npm run test:neon` comprueba el mismo permiso entre instancias con bloqueos reales de PostgreSQL y sesiones persistidas, dentro de esquemas temporales eliminados al terminar. **No se declara presencia física para aprobar automáticamente visitas en la campaña real.** Las comprobaciones de publicación leen el estado o ejercitan rechazos sin emitir participaciones ni premios.
+
+## Registro de clics hacia Instagram
+
+`tests/instagram-clicks.test.js` verifica persistencia, idempotencia concurrente, límites de conservación, rechazo de datos no permitidos y ausencia de cambios en el estado de negocio. La prueba adicional de PostgreSQL confirma el mismo comportamiento entre escritores e instancias. La ruta no crea identidad de navegador ni vincula personas o cupones al evento.
+
+`npm run test:instagram` ejecuta seis grupos en Chrome con API y datos locales reales: no hay registros al cargar páginas, la navegación nativa no espera al guardado, los reintentos tras una respuesta perdida no duplican eventos, los tres orígenes del enlace quedan diferenciados y los errores no bloquean el cupón. También comprueba ausencia de referencias o tokens privados en el enlace y el panel adaptable. Solo el destino externo usa una página estática de navegación; no se afirma haber probado Instagram real ni un seguimiento. Los eventos y premios son de una instalación temporal, nunca de la campaña publicada.
 
 ## Comprobaciones PWA
 

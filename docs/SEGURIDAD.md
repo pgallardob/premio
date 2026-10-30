@@ -45,7 +45,9 @@ Para Instagram no sirven el número total de seguidores ni un botón «Ya te sig
 
 No implementar el seguimiento como condición para participar, revelar el resultado o canjear sobre la base de que existe `is_user_follow_business`. El análisis anterior de viabilidad era incompleto: faltaba comprobar el uso permitido. No se ha creado la aplicación Meta ni aceptado sus condiciones de creación; el asistente permanece en **Resumen**.
 
-La alternativa recomendada, todavía pendiente de la decisión del propietario, es mostrar Instagram como invitación voluntaria sin alterar la participación presencial y sin compra. No garantiza un seguidor por participante, pero evita ese incentivo condicionado y no necesita consultar perfiles para mostrar un enlace. Cualquier integración posterior debe cumplir las [normas de promociones de Instagram](https://help.instagram.com/179379842258600), las políticas de plataforma y los requisitos de consentimiento. No ocultar resultados ya emitidos ni fingir una verificación por abrir un enlace.
+El propietario limitó el trabajo de software a [registrar el clic](INSTAGRAM_CLICS.md) en un enlace normal. El sistema no comprueba seguidores, no acredita visitas al perfil y no agrega condiciones de participación o canje. No requiere una aplicación Meta ni la API de Instagram. Los eventos son declarados por el cliente, limitados e idempotentes dentro de su conservación; no certifican personas ni acciones humanas.
+
+Una condición impresa o publicada en otra página no queda exenta de normas ni se garantiza que sea desconocida por Meta. Esta entrega no implementa ni valida esa condición externa. Cualquier uso posterior debe cumplir las [normas de promociones de Instagram](https://help.instagram.com/179379842258600), las políticas aplicables y los requisitos de información y consentimiento. No ocultar resultados ya emitidos ni tratar un clic como prueba de seguimiento.
 
 ## Alternativa de publicación con archivo
 

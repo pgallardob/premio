@@ -47,6 +47,13 @@ try {
   await expect(page.locator('#campaign-status-label')).toHaveText(campaignLabel);
   if (!status.active || status.availableStock === 0) await expect(page.locator('#participate-button')).toBeDisabled();
   else await expect(page.locator('#participate-button')).toBeEnabled();
+  const instagram = page.locator('[data-instagram-source="home"]');
+  await expect(instagram).toHaveAttribute('href', 'https://www.instagram.com/comercializadora_los_olivos_/');
+  await expect(instagram).toHaveAttribute('rel', 'noopener noreferrer');
+  const invalidClick = await context.request.post(`${api}/api/instagram/clicks`, {
+    headers: { Origin: new URL(base).origin, 'Idempotency-Key': 'publication-invalid-click-source' }, data: { source: 'unsupported' } });
+  expect(invalidClick.status()).toBe(400);
+  expect((await invalidClick.json()).error.code).toBe('INVALID_INPUT');
   expect(await page.locator('.prize-card__image').evaluateAll(async (images) => {
     for (const image of images) image.loading = 'eager';
     await Promise.all(images.map((image) => image.decode()));
@@ -70,8 +77,12 @@ try {
   await page.goto(`${base}admin.html`);
   await expect(page.locator('#login-button')).toBeEnabled();
   await page.locator('#admin-password').fill(password);
+  const dashboardReady = page.waitForResponse(response => response.url() === `${api}/api/admin/dashboard` && response.status() === 200);
   await page.locator('#login-button').click();
   await expect(page.locator('#admin-shell')).toBeVisible({ timeout: 30_000 });
+  const snapshot = await (await dashboardReady).json();
+  await expect(page.locator('#instagram-click-total')).toHaveText(new Intl.NumberFormat('es-CL').format(snapshot.instagramClicks.total));
+  console.log('PASS Click-only profile link and private counter; invalid-source rejection verified without logging synthetic events.');
   const session = await page.evaluate(() => JSON.parse(sessionStorage.getItem('olivos_session_v1')).token);
   await page.reload();
   await expect(page.locator('#admin-shell')).toBeVisible({ timeout: 30_000 });

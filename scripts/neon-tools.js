@@ -143,13 +143,14 @@ if (['inspect', 'migrate', 'verify', 'inventory-plan', 'inventory-apply', 'set-c
       console.log(JSON.stringify({ active: state.settings.campaignActive, cooldownEnabled: state.settings.cooldownEnabled,
         cooldownHours: state.settings.cooldownHours, stock: Object.values(state.inventory).reduce((sum, value) => sum + value, 0),
         participations: state.totalParticipations, coupons: state.coupons.length, testCoupons: (state.testCoupons ?? []).length,
-        presenceRequired: state.settings.presenceRequired === true, visits: (state.visits ?? []).length, auditEntries: state.audit.length, businessFingerprint,
+        presenceRequired: state.settings.presenceRequired === true, visits: (state.visits ?? []).length,
+        instagramClicks: state.instagramClicks?.total ?? 0, auditEntries: state.audit.length, businessFingerprint,
         verificationSchemasRemaining: rows.some((row) => row.table_schema.startsWith('premio_verify_')) }, null, 2));
     }
   } finally { await pool.end(); }
 } else if (command === 'test') {
   const result = spawnSync(process.execPath, ['--test', '--test-concurrency=1', 'tests/neon.test.js'], {
-    cwd: root, stdio: 'inherit', env: { ...process.env, NEON_VERIFY_DATABASE_URL: await databaseUrl() }, timeout: 180_000,
+    cwd: root, stdio: 'inherit', env: { ...process.env, NEON_VERIFY_DATABASE_URL: await databaseUrl() }, timeout: 300_000,
   });
   process.exitCode = result.status ?? 1;
 } else if (command === 'diagnose') {

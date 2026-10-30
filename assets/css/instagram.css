@@ -1,0 +1,8 @@
+.instagram-action { flex-direction: column; gap: .15rem; text-align: center; }
+.instagram-action small { color: inherit; font-size: .6rem; font-weight: 400; }
+.instagram-home { display: grid; justify-items: center; gap: .3rem; margin: 1rem auto; }
+.instagram-home .instagram-action { min-height: 44px; }
+.result-secondary-actions, .coupon-secondary-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: .5rem; }
+.result-secondary-actions .button { min-width: 0; padding-inline: .4rem; }
+.coupon-secondary-actions { grid-column: 1 / -1; }
+.coupon-secondary-actions .link-button { grid-column: auto; min-height: 44px; }

@@ -39,6 +39,7 @@ Abra `http://localhost:4173`. El comando de configuración muestra una contrase�
 npm run verify
 npm run test:browser
 npm run test:visits
+npm run test:instagram
 npm run test:pwa
 npm run production:check
 ```
@@ -66,6 +67,7 @@ Esta entrega es una **PWA**, no un APK, IPA ni una publicación en App Store/Goo
 - [Instalación Android / iOS](docs/INSTALACION_MOVIL.md)
 - [Operación del local](docs/OPERACION.md)
 - [Autorizar visitas sin exigir compra](docs/VISITAS.md)
+- [Registrar clics hacia Instagram, sin verificar seguidores](docs/INSTAGRAM_CLICS.md)
 - [Arquitectura](docs/ARQUITECTURA.md), [seguridad](docs/SEGURIDAD.md) y [diseño](docs/DISENO.md)
 - [Contrato HTTP](docs/API.md) · [OpenAPI](docs/api.openapi.json)
 - [Pruebas](docs/PRUEBAS.md), [requisitos](docs/REQUISITOS.md) y [dependencias](docs/DEPENDENCIAS.md)

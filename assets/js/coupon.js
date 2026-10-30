@@ -1,5 +1,8 @@
 import { request } from './api.js';
 import { $, message, busy, statusLabels, formatDate, renderFramedCoupon, downloadCoupon, copyText, couponUrl, toast } from './ui.js';
+import { initializeInstagramLinks } from './instagram.js';
+
+initializeInstagramLinks();
 
 const token = location.hash.slice(1);
 let coupon;

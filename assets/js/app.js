@@ -3,6 +3,7 @@ import { $, $$, element, icon, message, busy, updateRules, openDialog, initializ
 import { announceParticipation } from './updates.js';
 import { deployment } from './deployment.js';
 import { createVisitController } from './visits.js';
+import { initializeInstagramLinks } from './instagram.js';
 
 let campaign;
 let submitting = false;
@@ -12,6 +13,7 @@ let pendingKey;
 try { pendingKey = sessionStorage.getItem('olivos_pending_participation'); } catch { /* Storage may be disabled. */ }
 
 initializeDialogs();
+initializeInstagramLinks();
 const visits = createVisitController({ onChange: updateParticipationButton, onContinue: () => $('#participation-form').requestSubmit() });
 $('#current-year').textContent = new Date().getFullYear();
 
