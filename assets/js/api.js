@@ -1,4 +1,4 @@
-import { deployment } from './deployment.js?v=0.3.0';
+import { deployment } from './deployment.js?v=0.4.0';
 
 let csrfToken = '';
 const remote = deployment.bearerTransport === true;
@@ -39,7 +39,7 @@ export class ApiError extends Error {
 
 export function setCsrfToken(value) { csrfToken = value; }
 
-export async function request(path, { method = 'GET', body, headers = {}, responseType = 'json' } = {}) {
+export async function request(path, { method = 'GET', body, headers = {}, responseType = 'json', keepalive = false } = {}) {
   if (!deployment.backendAvailable) throw new ApiError({ code: 'BACKEND_NOT_CONFIGURED', message: deployment.backendNotice });
   let response;
   const controller = new AbortController();
@@ -51,6 +51,7 @@ export async function request(path, { method = 'GET', body, headers = {}, respon
       method,
       credentials: remote ? 'omit' : 'same-origin',
       cache: 'no-store',
+      keepalive,
       signal: controller.signal,
       headers: { ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
         ...(csrfToken ? { 'X-CSRF-Token': csrfToken } : {}),

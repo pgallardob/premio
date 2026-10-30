@@ -1,8 +1,9 @@
-import { request, uniqueRequestKey } from './api.js?v=0.3.0';
-import { $, $$, element, icon, message, busy, updateRules, openDialog, initializeDialogs, emptyState, statusChip, formatDate, renderFramedCoupon, couponUrl, downloadCoupon, toast } from './ui.js?v=0.3.0';
-import { announceParticipation } from './updates.js?v=0.3.0';
-import { deployment } from './deployment.js?v=0.3.0';
-import { createVisitController } from './visits.js?v=0.3.0';
+import { request, uniqueRequestKey } from './api.js?v=0.4.0';
+import { $, $$, element, icon, message, busy, updateRules, openDialog, initializeDialogs, emptyState, statusChip, formatDate, renderFramedCoupon, couponUrl, downloadCoupon, toast } from './ui.js?v=0.4.0';
+import { announceParticipation } from './updates.js?v=0.4.0';
+import { deployment } from './deployment.js?v=0.4.0';
+import { createVisitController } from './visits.js?v=0.4.0';
+import { initializeInstagramLinks } from './instagram.js?v=0.4.0';
 
 let campaign;
 let submitting = false;
@@ -12,6 +13,7 @@ let pendingKey;
 try { pendingKey = sessionStorage.getItem('olivos_pending_participation'); } catch { /* Storage may be disabled. */ }
 
 initializeDialogs();
+initializeInstagramLinks();
 const visits = createVisitController({ onChange: updateParticipationButton, onContinue: () => $('#participation-form').requestSubmit() });
 $('#current-year').textContent = new Date().getFullYear();
 

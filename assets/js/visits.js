@@ -1,5 +1,5 @@
-import { request, apiUrl } from './api.js?v=0.3.0';
-import { $, message, busy, openDialog, formatDate } from './ui.js?v=0.3.0';
+import { request, apiUrl } from './api.js?v=0.4.0';
+import { $, message, busy, openDialog, formatDate } from './ui.js?v=0.4.0';
 
 export function createVisitController({ onChange, onContinue }) {
   let required = false;

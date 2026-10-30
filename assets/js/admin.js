@@ -1,7 +1,7 @@
-import { request, setCsrfToken } from './api.js?v=0.3.0';
-import { $, $$, element, icon, message, busy, formatDate, statusChip, emptyState, openDialog, initializeDialogs, toast } from './ui.js?v=0.3.0';
-import { onParticipationRecorded } from './updates.js?v=0.3.0';
-import { deployment } from './deployment.js?v=0.3.0';
+import { request, setCsrfToken } from './api.js?v=0.4.0';
+import { $, $$, element, icon, message, busy, formatDate, statusChip, emptyState, openDialog, initializeDialogs, toast } from './ui.js?v=0.4.0';
+import { onParticipationRecorded } from './updates.js?v=0.4.0';
+import { deployment } from './deployment.js?v=0.4.0';
 
 let dashboard;
 let signedIn = false;
@@ -163,6 +163,16 @@ $$('[data-go-redeem]').forEach((button) => button.addEventListener('click', () =
 }));
 
 function renderOverview() {
+  const clicks = dashboard.instagramClicks ?? { total: 0, recent: [] };
+  $('#instagram-click-total').textContent = new Intl.NumberFormat('es-CL').format(clicks.total);
+  const sources = { home: 'Enlace en la página principal', result: 'Enlace en el resultado', coupon: 'Enlace en la página de cupón' };
+  $('#instagram-click-events').replaceChildren(...(clicks.recent.length ? clicks.recent.map((entry) => {
+    const row = element('div', 'instagram-event');
+    const time = element('time', '', formatDate(entry.clickedAt, true));
+    time.dateTime = entry.clickedAt;
+    row.append(element('span', '', sources[entry.source] ?? 'Enlace de Instagram'), time);
+    return row;
+  }) : [element('p', '', 'Todavía no hay clics registrados.')]));
   $$('[data-total]').forEach((node) => { node.textContent = new Intl.NumberFormat('es-CL').format(dashboard.totals[node.dataset.total]); });
   $('#active-coupon-count').textContent = dashboard.totals.active;
   const status = $('#admin-campaign-status');

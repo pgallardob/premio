@@ -1,6 +1,6 @@
-import { request } from './api.js?v=0.3.0';
-import { $, updateRules } from './ui.js?v=0.3.0';
-import { deployment } from './deployment.js?v=0.3.0';
+import { request } from './api.js?v=0.4.0';
+import { $, updateRules } from './ui.js?v=0.4.0';
+import { deployment } from './deployment.js?v=0.4.0';
 
 $('#print-poster').disabled = true;
 $('#print-poster').addEventListener('click', () => window.print());
