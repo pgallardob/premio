@@ -1,5 +1,6 @@
 import { createHmac, randomBytes, randomInt } from 'node:crypto';
 import { AppError, requireFields, requireInput } from './errors.js';
+import { VisitService, requireApprovedVisit, pruneVisits } from './visits.js';
 
 const DAY = 86_400_000;
 const timezone = 'America/Santiago';
@@ -18,6 +19,11 @@ export function promotionReadiness(settings, config = {}) {
 export class Game {
   constructor(store, catalog, config, clock = Date.now) {
     Object.assign(this, { store, catalog, config, clock });
+    this.visits = new VisitService({ store, catalog, hashDevice: (value) => this.hash(value), clock,
+      prepare: (state) => this.expire(state), ready: (state) => {
+        const readiness = promotionReadiness(state.settings, config);
+        return !config.production || (readiness.promotionReviewed && Boolean(readiness.promotionContact));
+      } });
   }
 
   hash(value) {
@@ -25,6 +31,7 @@ export class Game {
   }
 
   expire(state) {
+    if (state.visits) pruneVisits(state, this.clock());
     for (const [device, at] of Object.entries(state.lastParticipation)) {
       if (this.clock() - at >= state.settings.cooldownHours * 3_600_000) delete state.lastParticipation[device];
     }
@@ -65,7 +72,7 @@ export class Game {
       const { interval, expiryDays, cooldownEnabled, cooldownHours, dailyCodeEnabled } = state.settings;
       return {
         active: state.settings.campaignActive,
-        rules: { interval, expiryDays, cooldownEnabled, cooldownHours, dailyCodeEnabled },
+        rules: { interval, expiryDays, cooldownEnabled, cooldownHours, dailyCodeEnabled, presenceRequired: state.settings.presenceRequired === true },
         prizes,
         availableStock: prizes.reduce((sum, prize) => sum + prize.stock, 0),
         publicUrl: this.config.publicUrl,
@@ -75,9 +82,10 @@ export class Game {
   }
 
   participate(deviceId, requestKey, input) {
-    requireFields(input, ['dailyCode']);
+    requireFields(input, ['dailyCode', 'visitId']);
     requireInput(typeof requestKey === 'string' && /^[\w-]{16,80}$/.test(requestKey), 'Falta una clave válida de participación.');
     requireInput(input.dailyCode === undefined || (typeof input.dailyCode === 'string' && input.dailyCode.length <= 24), 'El código del local no es válido.');
+    if ('visitId' in input) requireInput(typeof input.visitId === 'string' && /^[a-f0-9]{32}$/.test(input.visitId), 'La autorización de visita no es válida.');
     const deviceHash = this.hash(deviceId);
     return this.store.transaction((state) => {
       this.expire(state);
@@ -106,6 +114,7 @@ export class Game {
         || this.hash(`${rules.dailyCodeDate}:${input.dailyCode?.trim().toUpperCase()}`) !== rules.dailyCodeHash)) {
         throw new AppError(403, 'DAILY_CODE_REQUIRED', 'Ingresa el código de hoy que encontrarás en el local.');
       }
+      const visit = rules.presenceRequired ? requireApprovedVisit(state, input.visitId, deviceHash, this.clock()) : null;
       state.totalParticipations += 1;
       state.cycleProgress += 1;
       const entry = {
@@ -116,6 +125,11 @@ export class Game {
         won: state.cycleProgress === rules.interval,
         couponCode: null,
       };
+      if (visit) {
+        visit.status = 'used';
+        visit.usedAt = entry.createdAt;
+        entry.visitId = visit.id;
+      }
       if (entry.won) {
         const { stock, ...prize } = available[randomInt(available.length)];
         let code;
@@ -198,8 +212,8 @@ export class Game {
   }
 
   updateSettings(input) {
-    requireFields(input, ['interval', 'expiryDays', 'cooldownEnabled', 'dailyCodeEnabled', 'campaignActive', 'dailyCode', 'promotionContact', 'promotionReviewed']);
-    for (const key of ['cooldownEnabled', 'dailyCodeEnabled', 'campaignActive', 'promotionReviewed']) {
+    requireFields(input, ['interval', 'expiryDays', 'cooldownEnabled', 'dailyCodeEnabled', 'presenceRequired', 'campaignActive', 'dailyCode', 'promotionContact', 'promotionReviewed']);
+    for (const key of ['cooldownEnabled', 'dailyCodeEnabled', 'presenceRequired', 'campaignActive', 'promotionReviewed']) {
       if (key in input) requireInput(typeof input[key] === 'boolean', `El campo ${key} debe ser verdadero o falso.`);
     }
     requireInput(input.cooldownEnabled !== false, 'La protección de 24 horas no se puede desactivar.');
@@ -214,7 +228,7 @@ export class Game {
       const { dailyCode, ...settings } = input;
       if ('promotionContact' in settings) settings.promotionContact = settings.promotionContact.trim();
       const previous = promotionReadiness(state.settings, this.config);
-      const reviewChanged = ['interval', 'expiryDays', 'dailyCodeEnabled'].some((key) => key in settings && settings[key] !== state.settings[key])
+      const reviewChanged = ['interval', 'expiryDays', 'dailyCodeEnabled', 'presenceRequired'].some((key) => key in settings && settings[key] !== (state.settings[key] ?? false))
         || ('promotionContact' in settings && settings.promotionContact !== previous.promotionContact);
       if (reviewChanged && settings.promotionReviewed !== true) settings.promotionReviewed = false;
       const next = { ...state.settings, ...settings };

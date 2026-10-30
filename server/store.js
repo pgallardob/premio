@@ -11,6 +11,7 @@ export function initialState(catalog, defaults = {}) {
       cooldownEnabled: true,
       cooldownHours: 24,
       dailyCodeEnabled: false,
+      presenceRequired: false,
       dailyCodeHash: null,
       dailyCodeDate: null,
       campaignActive: false,
@@ -22,6 +23,7 @@ export function initialState(catalog, defaults = {}) {
     participations: [],
     coupons: [],
     testCoupons: [],
+    visits: [],
     lastParticipation: {},
     audit: [],
   };
@@ -42,6 +44,7 @@ export function validateState(state) {
   const fingerprint = (value) => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
   const code = (value) => typeof value === 'string' && /^OLV-[A-F0-9]{12}$/.test(value);
   if (typeof settings.cooldownEnabled !== 'boolean' || settings.cooldownHours !== 24
+    || (settings.presenceRequired !== undefined && typeof settings.presenceRequired !== 'boolean')
     || (settings.promotionContact !== undefined && (typeof settings.promotionContact !== 'string' || settings.promotionContact.length > 200))
     || (settings.promotionReviewed !== undefined && typeof settings.promotionReviewed !== 'boolean')
     || (settings.promotionReviewedAt !== undefined && settings.promotionReviewedAt !== null && !validDate(settings.promotionReviewedAt))
@@ -58,7 +61,8 @@ export function validateState(state) {
       || (coupon.savedBy !== undefined && (!Array.isArray(coupon.savedBy) || coupon.savedBy.length > 100 || coupon.savedBy.some((device) => !fingerprint(device)))))
     || state.participations.some((entry) => !Number.isSafeInteger(entry.id) || entry.id < 1 || !validDate(entry.createdAt)
       || !fingerprint(entry.deviceHash) || typeof entry.requestKey !== 'string' || !/^[\w-]{16,80}$/.test(entry.requestKey)
-      || typeof entry.won !== 'boolean' || (entry.couponCode !== null && !code(entry.couponCode)))) {
+      || typeof entry.won !== 'boolean' || (entry.couponCode !== null && !code(entry.couponCode))
+      || (entry.visitId !== undefined && !/^[a-f0-9]{32}$/.test(entry.visitId)))) {
     throw new Error('El estado contiene reglas o registros no válidos. No se reinició ni sobrescribió el archivo.');
   }
   const tests = state.testCoupons === undefined ? [] : state.testCoupons;
@@ -69,6 +73,20 @@ export function validateState(state) {
     || (coupon.savedBy !== undefined && (!Array.isArray(coupon.savedBy) || coupon.savedBy.length > 100 || coupon.savedBy.some((device) => !fingerprint(device)))))
     || new Set([...state.coupons, ...tests].map((coupon) => coupon.token)).size !== state.coupons.length + tests.length) {
     throw new Error('El cupón de prueba no es válido. No se modificaron los datos.');
+  }
+  const visits = state.visits === undefined ? [] : state.visits;
+  if (!Array.isArray(visits) || visits.length > 1000 || visits.some((visit) => !visit
+    || !/^[a-f0-9]{32}$/.test(visit.id ?? '') || !/^VIS-[A-F0-9]{8}$/.test(visit.code ?? '') || !fingerprint(visit.deviceHash)
+    || !['pending', 'approved', 'used'].includes(visit.status) || !validDate(visit.createdAt) || !validDate(visit.expiresAt)
+    || Date.parse(visit.expiresAt) <= Date.parse(visit.createdAt)
+    || (visit.status === 'pending' ? visit.approvedAt !== null || visit.usedAt !== null
+      : !validDate(visit.approvedAt) || Date.parse(visit.approvedAt) < Date.parse(visit.createdAt)
+        || Date.parse(visit.approvedAt) >= Date.parse(visit.expiresAt)
+        || (visit.status === 'used' ? !validDate(visit.usedAt) || Date.parse(visit.usedAt) < Date.parse(visit.approvedAt)
+          || Date.parse(visit.usedAt) >= Date.parse(visit.expiresAt) : visit.usedAt !== null)))
+    || new Set(visits.map((visit) => visit.id)).size !== visits.length
+    || new Set(visits.map((visit) => visit.code)).size !== visits.length) {
+    throw new Error('Las solicitudes de visita no son válidas. No se modificaron los datos.');
   }
 }
 
