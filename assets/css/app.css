@@ -71,7 +71,14 @@ html { scroll-padding-top: calc(var(--site-header-height) + env(safe-area-inset-
 .section-heading[id] { scroll-margin-top: 0; }
 .section-heading .eyebrow { margin-bottom: 1.15rem; }
 .section h2 { margin: 0; font-size: clamp(2rem, 3.5vw, 3rem); line-height: 1.15; letter-spacing: -.055em; }
-.section-heading__aside { margin: 0 .2rem .2rem 0; font-size: .75rem; line-height: 1.9; color: var(--muted); }
+.section-heading__aside { display: grid; gap: .4rem; margin: 0; font-size: .8rem; line-height: 1.7; color: var(--muted); text-wrap: pretty; }
+.section-heading__aside strong { color: var(--paper); font-size: 1.03em; font-weight: 500; }
+#prizes-section .section-heading { display: grid; grid-template-columns: minmax(0, 1fr) minmax(14rem, 22rem); align-items: end; gap: 1.5rem; }
+#prizes-section .section-heading__aside { max-width: 22rem; padding: 0; font-size: clamp(.75rem, 1vw, .875rem); }
+@media (max-width: 600px) {
+  #prizes-section .section-heading { grid-template-columns: minmax(0, 1fr); gap: .9rem; }
+  #prizes-section .section-heading__aside { max-width: 38ch; margin: 0; font-size: .8rem; }
+}
 .prize-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1rem; }
 .prize-card { position: relative; margin: 0; overflow: hidden; padding: 0; border: 1px solid #3a49323d; border-radius: 16px; background: linear-gradient(145deg, #182119, #101811); transition: border-color 250ms, transform 250ms; }
 .prize-card:hover { transform: translateY(-5px); border-color: #8caa605c; }

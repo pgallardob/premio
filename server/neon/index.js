@@ -1,6 +1,6 @@
 import pg from 'pg';
 import catalogSource from '../../config/prizes.json' with { type: 'json' };
-import { Game } from '../game.js';
+import { Game, promotionReadiness } from '../game.js';
 import { PostgresStore } from './store.js';
 import { NeonAuth, PostgresRateLimiter } from './auth.js';
 import { createNeonHandler } from './handler.js';
@@ -21,6 +21,7 @@ const ready = async () => {
   initialization ??= store.initialize().catch((error) => { initialization = undefined; throw error; });
   await initialization;
   if (store.state.settings.cooldownEnabled !== true) throw new Error('The 24-hour protection is mandatory.');
-  if (store.state.settings.campaignActive && (!config.promotionReviewed || !config.promotionContact)) throw new Error('An active campaign requires reviewed terms and a contact.');
+  const readiness = promotionReadiness(store.state.settings, config);
+  if (store.state.settings.campaignActive && (!readiness.promotionReviewed || !readiness.promotionContact)) throw new Error('An active campaign requires reviewed terms and a contact.');
 };
 export default createNeonHandler({ config, ready, game: new Game(store, catalog, config), auth: new NeonAuth(config, store), limiter: new PostgresRateLimiter(store, config.deviceSecret) });

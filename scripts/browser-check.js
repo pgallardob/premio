@@ -17,6 +17,7 @@ const errors = [];
 const results = [];
 let browser;
 let expectedDashboardFailure = false;
+let expectedSettingsFailure = false;
 let winningPrivateUrl;
 const check = async (label, operation) => { await operation(); results.push(label); console.log(`PASS ${label}`); };
 
@@ -29,7 +30,8 @@ try {
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (entry) => {
     if (entry.type() === 'error' && !entry.text().includes('401')
-      && !(expectedDashboardFailure && entry.text().includes('net::ERR_FAILED'))) errors.push(entry.text());
+      && !(expectedDashboardFailure && entry.text().includes('net::ERR_FAILED'))
+      && !(expectedSettingsFailure && entry.text().includes('400'))) errors.push(entry.text());
   });
   const noOverflow = async () => {
     const sizes = await page.evaluate(() => ({ viewport: innerWidth, content: document.documentElement.scrollWidth }));
@@ -474,6 +476,56 @@ try {
     await loggedOutContext.close();
     await page.bringToFront();
     expect((await app.game.dashboard()).totals).toEqual(before);
+  });
+
+  await check('Publication review is explicit and settings feedback spans the form below its save button', async () => {
+    const original = structuredClone(app.store.state.settings);
+    const production = config.production;
+    try {
+      await app.store.transaction((state) => { state.settings.campaignActive = false; state.settings.promotionReviewed = false; state.settings.promotionReviewedAt = null; });
+      config.production = true;
+      await page.setViewportSize({ width: 1366, height: 768 });
+      await page.goto(`${config.publicUrl}/admin.html#settings`);
+      await expect(page.locator('#setting-reviewed')).not.toBeChecked();
+      await page.locator('#setting-contact').fill('contacto@example.invalid');
+      await page.locator('#setting-active').check();
+      expectedSettingsFailure = true;
+      await page.getByRole('button', { name: 'Guardar la experiencia' }).click();
+      await expect(page.locator('#settings-message')).toContainText('revisaste las bases');
+      expectedSettingsFailure = false;
+      expect(app.store.state.settings.campaignActive).toBe(false);
+      await page.locator('#settings-message').evaluate((node) => { node.textContent = 'Confirma las bases, el contacto de la promoción y el inventario antes de activar la campaña pública.'; });
+      for (const width of [1366, 800, 390, 320]) {
+        await page.setViewportSize({ width, height: 844 });
+        const boxes = await page.evaluate(() => ({
+          form: document.getElementById('settings-form').getBoundingClientRect().toJSON(),
+          button: document.querySelector('.settings-submit button').getBoundingClientRect().toJSON(),
+          message: document.getElementById('settings-message').getBoundingClientRect().toJSON(),
+        }));
+        expect(boxes.message.width).toBeGreaterThanOrEqual(boxes.form.width * .95);
+        expect(boxes.message.top).toBeGreaterThanOrEqual(boxes.button.bottom + 8);
+        expect(boxes.message.height).toBeLessThan(180);
+        await noOverflow();
+        if (width === 1366 || width === 390) await page.screenshot({ path: join(artifacts, `settings-feedback-${width}.png`), fullPage: true });
+      }
+      await page.locator('#setting-reviewed').check();
+      await page.getByRole('button', { name: 'Guardar la experiencia' }).click();
+      await expect(page.locator('#settings-message')).toContainText('actualizó correctamente');
+      await expect(page.locator('#promotion-review-status')).toContainText('Confirmación guardada');
+      expect(app.store.state.settings.campaignActive).toBe(true);
+    } finally {
+      expectedSettingsFailure = false;
+      config.production = production;
+      await app.store.transaction((state) => { state.settings = original; });
+    }
+    for (const [hash, dialog] of [['bases', 'rules-dialog'], ['privacidad', 'privacy-dialog']]) {
+      await page.goto(`${config.publicUrl}/#${hash}`);
+      await expect(page.locator(`#${dialog}`)).toBeVisible();
+      await page.keyboard.press('Escape');
+    }
+    await page.goto(`${config.publicUrl}/#premios`);
+    await expect(page.locator('.section-heading__aside strong')).toHaveText('Un detalle, un antojo, una sorpresa.');
+    await expect(page.locator('.section-heading__aside br')).toHaveCount(0);
   });
 
   expect(errors.filter((text) => !/Failed to load resource:.*429/.test(text))).toEqual([]);

@@ -173,9 +173,16 @@ td .link-button { font-size: .6rem; min-height: 34px; color: var(--accent); whit
 .switch-row strong { font-weight: 600; font-size: .8rem; }
 .switch-row input { flex: none; }
 .switch-row:last-child { margin-bottom: 0; border: 0; }
-.settings-submit { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 1.5rem; }
-.settings-submit .button { margin-left: auto; flex: none; }
-.settings-submit .form-message { margin: 0; }
+.publication-review { margin-top: 1.4rem; padding-top: 1.1rem; border-top: 1px solid var(--line); }
+.publication-links { display: flex; flex-wrap: wrap; align-items: center; gap: .7rem; margin: 0 0 1rem; font-size: .8rem; }
+.settings-form .review-confirmation { display: flex; align-items: flex-start; gap: .7rem; font-size: .8rem; line-height: 1.65; }
+.review-confirmation input { flex: none; margin-top: .2rem; }
+.review-confirmation span { min-width: 0; }
+.settings-submit { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: end; gap: .9rem; margin-top: 1.5rem; }
+.settings-submit .button { min-width: 15rem; max-width: 100%; margin: 0; }
+.settings-submit .form-message { justify-self: stretch; width: 100%; min-width: 0; max-width: none; margin: 0; padding: 1rem 1.1rem; border: 1px solid var(--line); border-radius: 12px; background: #ffffff04; font-size: .85rem; line-height: 1.7; text-wrap: pretty; }
+.settings-submit .form-message[data-kind='error'] { border-color: #ce8e6d55; background: #9e47330d; }
+.settings-submit .form-message[data-kind='success'] { border-color: #a8cb7340; background: #a8cb7308; }
 .admin-footer { display: flex; justify-content: space-between; gap: 1rem; margin-top: 2rem; padding-block: 1.7rem; color: var(--subtle); font-size: .45rem; letter-spacing: .08em; }
 .redemption-detail { display: flex; gap: 1.3rem; align-items: center; padding: 1rem; border: 1px solid var(--line); border-radius: 12px; background: #b3d77705; }
 .redemption-detail img { width: 80px; height: 110px; object-fit: contain; }

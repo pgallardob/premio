@@ -21,7 +21,7 @@ La PWA está publicada en `https://pgallardob.github.io/premio/` y conectada a u
 ## Pendiente de información o verificación externa
 
 1. **Inventario real cargado:** 20 destapadores Monster, 20 galletas mini Costa, 10 Jokey, 5 poleras y 3 agendas; total 58. Esta carga ya se aplicó y sustituyó el plan anterior. Falta la autorización y configuración de activación, no una nueva carga automática.
-2. **Bases, privacidad y contacto:** completar datos reales, conservación/eliminación y revisión legal aplicable a la promoción en Chile.
+2. **Bases y privacidad:** el contacto real ya está guardado. El propietario debe revisar conservación/eliminación, requisitos legales aplicables y confirmar las bases desde el panel antes de activar; no se ha marcado esa confirmación automáticamente.
 3. **Respaldo PostgreSQL externo y calendario:** configurarlos y probar restauración; los respaldos de archivos de Node no respaldan Neon.
 4. **Teléfonos físicos:** verificar Android, iPhone/Safari, QR impreso, entrega real y rechazo del segundo canje.
 
@@ -35,11 +35,11 @@ Una cookie no identifica a una persona; borrarla o cambiar de navegador puede el
 
 - Node.js 24.22.1 LTS, descargado de la fuente oficial y verificado por SHA256; no se cambió el runtime global de otros proyectos.
 - **23/23** pruebas de HTTP, reglas, configuración y mantenimiento aprobadas.
-- **19/19** recorridos de interfaz en Chrome aprobados.
+- **20/20** recorridos de interfaz en Chrome aprobados, incluido el guardado con confirmación explícita y mensajes de ancho completo.
 - **7/7** comprobaciones PWA, privacidad de caché, offline e instalación guiada aprobadas.
 - Verificación de la instalación local: cero participaciones, cupones, referencias y auditoría; ciclo/contador cero, stock cero y campaña pausada con límite de 24 horas.
 - Auditoría de dependencias sin vulnerabilidades reportadas en la instalación verificada.
-- Ocho pruebas adicionales contra PostgreSQL real verifican concurrencia, rollback, idempotencia, sesiones, CSRF, canje único y límites persistentes. Sus esquemas de verificación se eliminaron; no quedaron datos de prueba en la campaña.
+- Diez pruebas contra PostgreSQL real verifican concurrencia, rollback, idempotencia, sesiones, CSRF, canje único, carga atómica, contacto y confirmación persistidos y límites de solicitudes. Sus esquemas de verificación se eliminaron; no quedaron datos de prueba en la campaña.
 - Chrome verificó la web pública contra la API real: CORS, identidad del navegador, login y sesión tras recarga, CSV, logout revocado, manifiesto y service worker. No se emitieron premios ni se alteró el stock real.
 - `artifacts/production-check.json` corresponde al despliegue local con archivo. El estado de Neon se consulta con `node scripts/neon-tools.js verify`; la promoción continúa bloqueada por los datos del negocio, no por falta de backend.
 

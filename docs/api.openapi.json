@@ -1,6 +1,6 @@
 {
   "openapi": "3.1.0",
-  "info": { "title": "Los Olivos Premio", "version": "0.2.1", "description": "Shared API for same-origin Node with a file store and cross-origin Neon Functions with transactional PostgreSQL. No public test mode. Fresh installations are paused with zero stock and mandatory 24-hour protection. Reuse the Idempotency-Key after uncertain failures. Node uses HttpOnly cookies; Neon uses bearer sessions and signed X-Olivos-Device headers. Both admin transports require X-CSRF-Token for mutations." },
+  "info": { "title": "Los Olivos Premio", "version": "0.2.3", "description": "Shared API for same-origin Node with a file store and cross-origin Neon Functions with transactional PostgreSQL. No public test mode. Fresh installations are paused with zero stock and mandatory 24-hour protection. Reuse the Idempotency-Key after uncertain failures. Node uses HttpOnly cookies; Neon uses bearer sessions and signed X-Olivos-Device headers. Both admin transports require X-CSRF-Token for mutations. Administrators explicitly save public promotion contact and owner review confirmation; these survive restarts and are never automatically approved." },
   "x-neon-transport": { "frontendOrigin": "https://pgallardob.github.io", "credentials": "omit", "deviceHeader": "X-Olivos-Device", "deviceStorage": "Frontend localStorage, scoped to the API origin; only an in-memory fallback when unavailable.", "sessionHeader": "X-Olivos-Session", "sessionStorage": "Frontend sessionStorage; 8-hour server expiry and database-backed revocation.", "cors": "Exact frontend origin; preflight allows Authorization, Content-Type, X-CSRF-Token, X-Olivos-Device and Idempotency-Key. No wildcard or third-party cookies.", "rateLimit": "Persistent global limits; client forwarding headers are not trusted." },
   "servers": [{ "url": "http://localhost:4173" }],
   "paths": {
@@ -17,7 +17,7 @@
           "200": { "description": "Accepted or replayed; won=true contains a private Coupon.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Participation" } } } },
           "400": { "$ref": "#/components/responses/BadRequest" },
           "403": { "description": "DAILY_CODE_REQUIRED: missing, expired or incorrect local code.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
-          "409": { "description": "CAMPAIGN_PAUSED.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "409": { "description": "CAMPAIGN_PAUSED or PROMOTION_NOT_READY; no participation counted.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
           "429": { "description": "COOLDOWN or RATE_LIMITED. retryAt identifies the next allowed time; Retry-After is in seconds.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
           "503": { "description": "OUT_OF_STOCK; no participation is counted.", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
@@ -54,8 +54,8 @@
     },
     "/api/admin/settings": {
       "patch": {
-        "operationId": "updateSettings", "security": [{ "session": [], "csrf": [] }, { "neonSession": [], "csrf": [] }], "summary": "Update validated rules. interval can change only between cycles. expiryDays affects new coupons only. Daily codes expire at midnight in America/Santiago.",
-        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "additionalProperties": false, "properties": { "interval": { "type": "integer", "minimum": 2, "maximum": 1000 }, "expiryDays": { "type": "integer", "minimum": 1, "maximum": 30 }, "cooldownEnabled": { "type": "boolean" }, "dailyCodeEnabled": { "type": "boolean" }, "campaignActive": { "type": "boolean" }, "dailyCode": { "type": "string", "minLength": 4, "maxLength": 24 } } } } } },
+        "operationId": "updateSettings", "security": [{ "session": [], "csrf": [] }, { "neonSession": [], "csrf": [] }], "summary": "Update validated rules, public contact and explicit owner review. Contact/rule changes invalidate prior review unless explicitly reconfirmed in the same request. Activation requires contact, review and available catalog stock. Legacy deployment values are fallback defaults only.",
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "additionalProperties": false, "properties": { "interval": { "type": "integer", "minimum": 2, "maximum": 1000 }, "expiryDays": { "type": "integer", "minimum": 1, "maximum": 30 }, "cooldownEnabled": { "type": "boolean" }, "dailyCodeEnabled": { "type": "boolean" }, "campaignActive": { "type": "boolean" }, "promotionContact": { "type": "string", "maxLength": 200, "description": "Public contact, trimmed before storage. Empty is allowed only while paused." }, "promotionReviewed": { "type": "boolean", "description": "Explicit administrator confirmation of published terms/privacy. Server records promotionReviewedAt; the client cannot supply that timestamp." }, "dailyCode": { "type": "string", "minLength": 4, "maxLength": 24 } } } } } },
         "responses": { "200": { "description": "Safe settings." }, "400": { "$ref": "#/components/responses/BadRequest" }, "401": { "$ref": "#/components/responses/Unauthorized" }, "403": { "$ref": "#/components/responses/Forbidden" }, "409": { "description": "CYCLE_IN_PROGRESS; current cycle must complete before interval can change." } }
       }
     },

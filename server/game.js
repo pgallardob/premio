@@ -6,6 +6,15 @@ const timezone = 'America/Santiago';
 const dayFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: timezone });
 const dayKey = (date) => dayFormatter.format(date);
 
+export function promotionReadiness(settings, config = {}) {
+  const contact = settings.promotionContact ?? config.promotionContact ?? '';
+  return {
+    promotionContact: typeof contact === 'string' ? contact.trim() : '',
+    promotionReviewed: settings.promotionReviewed ?? (config.promotionReviewed === true),
+    promotionReviewedAt: settings.promotionReviewedAt ?? null,
+  };
+}
+
 export class Game {
   constructor(store, catalog, config, clock = Date.now) {
     Object.assign(this, { store, catalog, config, clock });
@@ -29,7 +38,7 @@ export class Game {
 
   safeSettings(settings) {
     const { dailyCodeHash, ...safe } = settings;
-    return { ...safe, hasDailyCode: Boolean(dailyCodeHash) && settings.dailyCodeDate === dayKey(this.clock()) };
+    return { ...safe, ...promotionReadiness(settings, this.config), hasDailyCode: Boolean(dailyCodeHash) && settings.dailyCodeDate === dayKey(this.clock()) };
   }
 
   prizes(state) {
@@ -59,7 +68,7 @@ export class Game {
         prizes,
         availableStock: prizes.reduce((sum, prize) => sum + prize.stock, 0),
         publicUrl: this.config.publicUrl,
-        promotionContact: this.config.promotionContact ?? '',
+        promotionContact: promotionReadiness(state.settings, this.config).promotionContact,
       };
     });
   }
@@ -82,6 +91,8 @@ export class Game {
       if (previous) return result(previous, true);
       const rules = state.settings;
       if (!rules.campaignActive) throw new AppError(409, 'CAMPAIGN_PAUSED', 'La experiencia está en pausa. Vuelve a visitarnos pronto.');
+      const readiness = promotionReadiness(rules, this.config);
+      if (this.config.production && (!readiness.promotionReviewed || !readiness.promotionContact)) throw new AppError(409, 'PROMOTION_NOT_READY', 'La campaña está completando su configuración. Tu participación no se ha contado.');
       const available = this.prizes(state).filter((prize) => prize.stock > 0);
       if (!available.length) throw new AppError(503, 'OUT_OF_STOCK', 'Estamos preparando nuevas sorpresas. Tu participación no se ha contado.');
       const last = state.lastParticipation[deviceHash];
@@ -182,14 +193,12 @@ export class Game {
   }
 
   updateSettings(input) {
-    requireFields(input, ['interval', 'expiryDays', 'cooldownEnabled', 'dailyCodeEnabled', 'campaignActive', 'dailyCode']);
-    for (const key of ['cooldownEnabled', 'dailyCodeEnabled', 'campaignActive']) {
+    requireFields(input, ['interval', 'expiryDays', 'cooldownEnabled', 'dailyCodeEnabled', 'campaignActive', 'dailyCode', 'promotionContact', 'promotionReviewed']);
+    for (const key of ['cooldownEnabled', 'dailyCodeEnabled', 'campaignActive', 'promotionReviewed']) {
       if (key in input) requireInput(typeof input[key] === 'boolean', `El campo ${key} debe ser verdadero o falso.`);
     }
     requireInput(input.cooldownEnabled !== false, 'La protección de 24 horas no se puede desactivar.');
-    if (input.campaignActive && this.config.production) {
-      requireInput(this.config.promotionReviewed && this.config.promotionContact, 'Confirma las bases, el contacto de la promoción y el inventario antes de activar la campaña pública.');
-    }
+    if ('promotionContact' in input) requireInput(typeof input.promotionContact === 'string' && input.promotionContact.trim().length <= 200, 'El contacto de la promoción debe ser un texto de hasta 200 caracteres.');
     if ('interval' in input) requireInput(Number.isInteger(input.interval) && input.interval >= 2 && input.interval <= 1000, 'El intervalo debe estar entre 2 y 1000.');
     if ('expiryDays' in input) requireInput(Number.isInteger(input.expiryDays) && input.expiryDays >= 1 && input.expiryDays <= 30, 'La vigencia debe estar entre 1 y 30 días.');
     if ('dailyCode' in input) requireInput(typeof input.dailyCode === 'string' && /^[A-Za-z0-9-]{4,24}$/.test(input.dailyCode), 'El código debe contener entre 4 y 24 letras, números o guiones.');
@@ -197,9 +206,24 @@ export class Game {
       if ('interval' in input && input.interval !== state.settings.interval && state.cycleProgress !== 0) {
         throw new AppError(409, 'CYCLE_IN_PROGRESS', 'Completa el ciclo actual antes de cambiar la frecuencia de premios.');
       }
-      if (input.campaignActive) requireInput(Object.values(state.inventory).some((stock) => stock > 0), 'Carga inventario real antes de activar la campaña.');
       const { dailyCode, ...settings } = input;
+      if ('promotionContact' in settings) settings.promotionContact = settings.promotionContact.trim();
+      const previous = promotionReadiness(state.settings, this.config);
+      const reviewChanged = ['interval', 'expiryDays', 'dailyCodeEnabled'].some((key) => key in settings && settings[key] !== state.settings[key])
+        || ('promotionContact' in settings && settings.promotionContact !== previous.promotionContact);
+      if (reviewChanged && settings.promotionReviewed !== true) settings.promotionReviewed = false;
+      const next = { ...state.settings, ...settings };
+      const readiness = promotionReadiness(next, this.config);
+      if (this.config.production && next.campaignActive) {
+        requireInput(readiness.promotionContact, 'Completa el contacto de la promoción antes de activar la campaña.');
+        requireInput(readiness.promotionReviewed, 'Confirma que revisaste las bases y la privacidad antes de activar la campaña.');
+      }
+      if (input.campaignActive) requireInput(this.prizes(state).some((prize) => prize.stock > 0), 'Carga inventario real antes de activar la campaña.');
       Object.assign(state.settings, settings);
+      if ('promotionReviewed' in settings) {
+        if (!settings.promotionReviewed) state.settings.promotionReviewedAt = null;
+        else if (reviewChanged || !state.settings.promotionReviewedAt) state.settings.promotionReviewedAt = new Date(this.clock()).toISOString();
+      }
       if (dailyCode) {
         state.settings.dailyCodeDate = dayKey(this.clock());
         state.settings.dailyCodeHash = this.hash(`${state.settings.dailyCodeDate}:${dailyCode.trim().toUpperCase()}`);

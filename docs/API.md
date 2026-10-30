@@ -1,15 +1,15 @@
 # Contrato HTTP de Los Olivos
 
-La fuente contractual es [api.openapi.json](api.openapi.json), OpenAPI 3.1. Esta guía explica cómo usarla. Todos los clientes utilizan el mismo origen; no hay un proveedor externo ni credenciales de terceros.
+La fuente contractual es [api.openapi.json](api.openapi.json), OpenAPI 3.1. La instalación Node usa el mismo origen y cookies; la publicación Pages + Neon utiliza CORS restringido y credenciales bearer según [Neon](NEON.md). No se incluyen credenciales de base de datos en el cliente.
 
-La versión 0.2.0 no expone un modo de prueba. Una instalación nueva empieza pausada, con stock cero y límite de 24 horas obligatorio. El campo `testMode` se retiró; la configuración rechaza desactivar `cooldownEnabled`.
+Desde la versión 0.2.0 no se expone un modo de prueba. Una instalación nueva empieza pausada, con stock cero y límite de 24 horas obligatorio. El campo `testMode` se retiró; la configuración rechaza desactivar `cooldownEnabled`.
 
 ## Participar sin registrar vistas como jugadas
 
-1. `GET /api/status` consulta reglas, establece la cookie firmada y no registra una participación.
+1. `GET /api/status` consulta reglas y establece una cookie firmada (Node) o devuelve `X-Olivos-Device` (Neon), sin registrar una participación.
 2. El usuario presiona el botón.
 3. `POST /api/participations` envía JSON y una nueva `Idempotency-Key` de 16 a 80 caracteres alfanuméricos, guiones o guiones bajos.
-4. Si la respuesta es incierta, se reintenta con **la misma clave y la misma cookie**.
+4. Si la respuesta es incierta, se reintenta con **la misma clave y el mismo identificador firmado de navegador**.
 
 Un resultado aceptado siempre responde `200`, sea ganador, no ganador o repetición idempotente. El campo `replayed` permite distinguir el último caso. Un error devuelve `{ "error": { "code": "...", "message": "..." } }`.
 
@@ -32,9 +32,9 @@ Al abrir un enlace privado, la interfaz envía `{ "token": "..." }` a `/api/wall
 
 ## Autenticación administrativa
 
-`POST /api/admin/login` recibe `{ "password": "..." }`. Si la contraseña es válida, establece una cookie `olivos_session` y devuelve `csrfToken` y `expiresAt`. No guarde estos valores en código, HTML, `localStorage` ni documentación.
+`POST /api/admin/login` recibe `{ "password": "..." }`. Devuelve `csrfToken` y `expiresAt` y establece una cookie `olivos_session` en Node o el encabezado `X-Olivos-Session` en Neon. No guarde estas credenciales en código, HTML, `localStorage` ni documentación.
 
-La sesión dura ocho horas, se conserva solo en memoria y se revoca al reiniciar el servidor. `GET /api/admin/session` permite restaurar el token CSRF en una pestaña nueva. Las mutaciones administrativas requieren la cookie y el encabezado `X-CSRF-Token`; las consultas requieren la cookie.
+La sesión dura ocho horas. Node la conserva en memoria; Neon persiste su hash y revocación en PostgreSQL, por lo que no desaparece al reiniciar una función. Neon entrega la credencial en `X-Olivos-Session`; se conserva en `sessionStorage` y se envía como `Authorization: Bearer`. Ambas variantes exigen `X-CSRF-Token` para mutaciones.
 
 | Método | Ruta | Función |
 |---|---|---|
@@ -49,6 +49,14 @@ La sesión dura ocho horas, se conserva solo en memoria y se revoca al reiniciar
 
 ## Errores que cambian una decisión
 
+### Contacto y confirmación antes de activar
+
+`PATCH /api/admin/settings` acepta `promotionContact` (texto público de hasta 200 caracteres) y `promotionReviewed` (confirmación explícita del administrador). El servidor registra `promotionReviewedAt`; ese campo no puede enviarse ni falsificarse desde el cliente. Guardar un contacto no aprueba las bases ni activa la campaña.
+
+La activación pública exige contacto, revisión y unidades disponibles del catálogo. Cambiar contacto, frecuencia, vigencia o verificación diaria invalida la revisión anterior si no se reconfirma expresamente. La confirmación queda persistida y también se utiliza al reiniciar; las variables de despliegue sirven solo de compatibilidad para instalaciones anteriores.
+
+### Respuestas de error
+
 | Código | HTTP | Acción del cliente |
 |---|---|---|
 | `INVALID_INPUT` / `INVALID_JSON` | 400 | Corregir la solicitud; no repetir sin cambios. |
@@ -57,21 +65,22 @@ La sesión dura ocho horas, se conserva solo en memoria y se revoca al reiniciar
 | `DAILY_CODE_REQUIRED` | 403 | Solicitar el código actual visible en el local. |
 | `NOT_FOUND` | 404 | Revisar el enlace o código; no enumerar valores. |
 | `CAMPAIGN_PAUSED` | 409 | Informar pausa; no sumar participación. |
+| `PROMOTION_NOT_READY` | 409 | Completar la configuración de la campaña; no se contó participación. |
 | `CYCLE_IN_PROGRESS` | 409 | Esperar a completar el ciclo para cambiar frecuencia. |
 | `COUPON_REDEEMED` / `COUPON_EXPIRED` | 409 | No entregar otro premio. |
 | `COOLDOWN` / `RATE_LIMITED` | 429 | Respetar `Retry-After` y `error.retryAt`. |
 | `OUT_OF_STOCK` | 503 | No se contó participación; esperar reposición. |
 | `INTERNAL_ERROR` | 500 | Reintentar una participación con la misma clave. |
 
-Las solicitudes JSON se limitan a 8 KiB. El servidor no habilita CORS. Los campos desconocidos en las mutaciones se rechazan para detectar errores de integración.
+Las solicitudes JSON se limitan a 8 KiB. Node no necesita CORS; Neon admite únicamente el origen de la interfaz configurada. Los campos desconocidos en las mutaciones se rechazan para detectar errores de integración.
 
-En producción se rechaza un `Host` distinto del dominio configurado. Las cabeceras de IP reenviada solo se utilizan si la conexión inmediata pertenece a `TRUSTED_PROXIES`; de lo contrario, no alteran los límites de acceso. Activar una campaña pública requiere revisión del propietario, contacto e inventario, además de HTTPS.
+En Node de producción se rechaza un `Host` distinto del dominio configurado y las cabeceras reenviadas solo se usan desde `TRUSTED_PROXIES`. Neon usa su gateway HTTPS y límites globales persistidos, sin confiar en IPs aportadas por el cliente. Activar una campaña pública exige revisión del propietario, contacto e inventario, además de HTTPS.
 
 ## Garantías y límites
 
 ### Actualización de clientes administrativos
 
-La interfaz reutiliza `GET /api/admin/dashboard`, sin modificar su autenticación ni añadir endpoints. Lo consulta cada tres segundos en primer plano, al recuperar el foco y ante avisos de participación de otras pestañas del mismo origen. No recarga el documento ni sustituye información del servidor por un contador local. En segundo plano deja de consultar; los errores de sesión detienen las actualizaciones y exigen un nuevo ingreso.
+La interfaz reutiliza `GET /api/admin/dashboard`. Consulta cada 15 segundos en Neon y cada tres segundos en la alternativa local, al recuperar el foco y ante avisos de participación de otras pestañas del mismo origen. No recarga el documento ni sustituye información del servidor por un contador local. En segundo plano deja de consultar; los errores de sesión detienen las actualizaciones y exigen un nuevo ingreso.
 
 ### Garantías del servidor
 

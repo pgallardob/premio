@@ -175,3 +175,28 @@ integration('Neon login throttling persists across cold starts and ignores spoof
   }
   assert.equal((await client().login()).status, 429);
 });
+
+integration('Neon owner review and public contact persist and permit activation without deployment flags', async (t) => {
+  const { store, client, config, restart } = await fixture(t);
+  await store.transaction((state) => { state.settings.campaignActive = false; });
+  config.promotionReviewed = false;
+  config.promotionContact = '';
+  const admin = client();
+  await admin.login();
+  const contact = 'contacto@example.invalid';
+  assert.equal((await admin('/api/admin/settings', { method: 'PATCH', body: { promotionContact: contact } })).status, 200);
+  assert.equal((await admin('/api/admin/settings', { method: 'PATCH', body: { campaignActive: true } })).status, 400);
+  assert.equal((await admin('/api/admin/settings', { method: 'PATCH', body: { promotionReviewedAt: 'forged' } })).status, 400);
+  const approved = await admin('/api/admin/settings', { method: 'PATCH', body: { promotionReviewed: true, campaignActive: true } });
+  assert.equal(approved.status, 200);
+  assert.equal(approved.data.promotionReviewed, true);
+  assert.equal(typeof approved.data.promotionReviewedAt, 'string');
+  restart();
+  const visitor = client();
+  const status = await visitor('/api/status');
+  assert.equal(status.data.promotionContact, contact);
+  assert.equal(status.data.active, true);
+  assert.equal((await visitor.participate()).status, 200);
+  await admin('/api/admin/settings', { method: 'PATCH', body: { campaignActive: false, promotionReviewed: false } });
+  assert.equal((await admin('/api/admin/settings', { method: 'PATCH', body: { campaignActive: true } })).status, 400);
+});

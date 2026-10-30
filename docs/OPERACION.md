@@ -22,11 +22,12 @@ El 30 de octubre de 2026 se aplicó el catálogo real solicitado por el propieta
 1. Ingrese en [Administración](https://pgallardob.github.io/premio/admin.html) con la contraseña nueva de publicación.
 2. **Los premios:** cargue unidades reales disponibles, excluyendo reservas de cupones vigentes.
 3. **La experiencia:** confirme frecuencia y vigencia; configure el código del local si lo utilizará.
-4. Active **Campaña activa** cuando estén completos los requisitos.
+4. Revise **Contacto de la promoción**, abra **Leer las bases** y **Leer la privacidad**, y marque la confirmación únicamente después de revisarlas.
+5. Active **Campaña activa** y presione **Guardar la experiencia** cuando estén completos los requisitos.
 
 La protección de una participación cada 24 horas es obligatoria y no se puede desactivar. Identifica navegadores, no personas. El contador central sigue decidiendo el orden y el premio se selecciona entre tipos con stock.
 
-Mientras la campaña esté pausada o no haya existencias, los botones de participación permanecen deshabilitados. Para activar en producción también deben estar completos el contacto y la revisión de bases en la configuración privada de despliegue; cargar stock por sí solo no completa esos requisitos.
+Mientras la campaña esté pausada o no haya existencias, los botones de participación permanecen deshabilitados. El contacto solicitado ya está guardado; falta la confirmación del propietario desde el panel. El teléfono no implica aprobación automática de las bases. Contacto y confirmación persisten entre reinicios; al modificar condiciones publicadas se requiere una nueva confirmación.
 
 ## Actualización del panel
 

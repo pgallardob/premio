@@ -4,7 +4,7 @@ import { resolve, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import QRCode from 'qrcode';
 import { FileStore } from './store.js';
-import { Game } from './game.js';
+import { Game, promotionReadiness } from './game.js';
 import { Auth, RateLimiter } from './auth.js';
 import { AppError } from './errors.js';
 import { createApiRouter, sendJson } from './api.js';
@@ -65,7 +65,8 @@ export async function createApplication(config) {
     await store.close();
     throw new Error('Producción requiere la protección de 24 horas activada.');
   }
-  if (config.production && store.state.settings.campaignActive && (!config.promotionReviewed || !config.promotionContact)) {
+  const readiness = promotionReadiness(store.state.settings, config);
+  if (config.production && store.state.settings.campaignActive && (!readiness.promotionReviewed || !readiness.promotionContact)) {
     await store.close();
     throw new Error('La campaña activa requiere bases revisadas y contacto antes de iniciar producción.');
   }

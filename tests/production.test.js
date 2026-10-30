@@ -74,7 +74,7 @@ test('fresh installations are paused, empty and protected; health reveals no bus
 test('production activation requires review, contact and stock; host and secure cookies are enforced', async (t) => {
   const { app, config } = await sandbox(t, { production: true, publicUrl: env.PUBLIC_URL, initialInventory: { jokey: 1 } });
   assert.throws(() => app.game.updateSettings({ cooldownEnabled: false }), (error) => error.status === 400);
-  assert.throws(() => app.game.updateSettings({ campaignActive: true }), (error) => error.status === 400);
+  await assert.rejects(app.game.updateSettings({ campaignActive: true }), (error) => error.status === 400);
   config.promotionReviewed = true;
   config.promotionContact = 'Contact the store';
   assert.equal((await app.game.updateSettings({ campaignActive: true })).campaignActive, true);

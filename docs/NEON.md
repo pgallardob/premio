@@ -64,9 +64,11 @@ El gateway de Neon responde a `/healthz` con su propio texto `ok`; eso no verifi
 
 ## Antes de aceptar participantes
 
-- Complete contacto y revisión de bases en las variables privadas de despliegue.
+- En **Administración → La experiencia**, complete el contacto y confirme explícitamente la revisión de bases y privacidad. Los campos persisten en PostgreSQL; no se aprueban automáticamente.
 - Configure únicamente stock real y active la campaña desde administración.
 - Verifique desde Android y Safari de iPhone el QR, instalación, sesión, cupón y canje.
 - Configure respaldo externo y seguimiento de las cuotas gratuitas.
 
 La instalación final se confirma en el teléfono; ninguna prueba de escritorio sustituye esa confirmación física.
+
+Las variables privadas de contacto y revisión se conservan como valores heredados de compatibilidad; una decisión explícita guardada en administración tiene prioridad. Si se revierte a una versión antigua que solo consultaba esas variables, pause primero la campaña y revise su configuración para evitar bloqueos al iniciar.

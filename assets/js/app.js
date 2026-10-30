@@ -130,9 +130,18 @@ $('#wallet-recovery-form').addEventListener('submit', async (event) => {
     message($('#wallet-recovery-message'), error instanceof TypeError ? 'Pega un enlace privado válido.' : error.message, 'error');
   } finally { busy(button, false); }
 });
-window.addEventListener('hashchange', () => {
-  if (location.hash === '#mis-cupones') { openDialog($('#wallet-dialog')); refreshWallet(); }
-});
+function openLinkedDialog(refresh = false) {
+  const id = { '#mis-cupones': 'wallet-dialog', '#bases': 'rules-dialog', '#privacidad': 'privacy-dialog' }[location.hash];
+  if (!id) return;
+  openDialog(document.getElementById(id));
+  if (refresh && id === 'wallet-dialog') refreshWallet();
+}
+window.addEventListener('hashchange', () => openLinkedDialog(true));
+for (const [id, hash] of [['rules-dialog', '#bases'], ['privacy-dialog', '#privacidad']]) {
+  document.getElementById(id).addEventListener('close', () => {
+    if (location.hash === hash) history.replaceState(null, '', `${location.pathname}${location.search}`);
+  });
+}
 
 function showResult(result) {
   const coupon = result.coupon;
@@ -208,7 +217,7 @@ $('#save-winner-button').addEventListener('click', async () => {
 
 async function initialize() {
   if (await loadCampaign()) await refreshWallet();
-  if (location.hash === '#mis-cupones') openDialog($('#wallet-dialog'));
+  openLinkedDialog();
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && !submitting) initialize(); });
 initialize();

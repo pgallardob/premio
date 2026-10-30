@@ -1,6 +1,8 @@
 import { readFile, access, constants, mkdir, writeFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { loadConfig } from '../server/config.js';
+import { promotionReadiness } from '../server/game.js';
+import { validateState } from '../server/store.js';
 
 const checks = [];
 const add = (name, ok, action) => checks.push({ name, ok: Boolean(ok), ...(ok ? {} : { action }) });
@@ -14,12 +16,15 @@ let url;
 try { url = new URL(process.env.PUBLIC_URL ?? ''); } catch { /* Report below. */ }
 add('URL HTTPS pública', url?.protocol === 'https:' && !['localhost', '127.0.0.1', '[::1]'].includes(url?.hostname) && !/\.(invalid|example|test)$/.test(url?.hostname ?? ''), 'Configure el dominio real, su DNS y un certificado HTTPS de confianza.');
 add('Credenciales nuevas de publicación', process.env.CREDENTIALS_ROTATED === 'true', 'Genere .env.production con credenciales nuevas; no reutilice la contraseña compartida durante el desarrollo.');
-add('Bases e inventario revisados', process.env.PROMOTION_REVIEWED === 'true', 'El propietario debe confirmar los premios, las bases y la política de datos.');
-add('Contacto de la promoción', Boolean(process.env.PROMOTION_CONTACT?.trim()), 'Configure un contacto real para consultas de la promoción.');
 let state;
 try { state = JSON.parse(await readFile(resolve(process.env.DATA_DIR ?? './data', 'state.json'), 'utf8')); }
 catch { /* A fresh volume is initialized safely at startup. */ }
+const readiness = promotionReadiness(state?.settings ?? {}, config ?? { promotionReviewed: process.env.PROMOTION_REVIEWED === 'true', promotionContact: process.env.PROMOTION_CONTACT ?? '' });
+add('Bases y privacidad revisadas', readiness.promotionReviewed === true, 'Confirme la revisión de bases y privacidad desde Administración.');
+add('Contacto de la promoción', Boolean(readiness.promotionContact), 'Configure un contacto real para consultas de la promoción.');
 if (state) {
+  try { validateState(state); add('Datos válidos', true); }
+  catch (error) { add('Datos válidos', false, error.message); }
   add('Protección de 24 horas', state.settings?.cooldownEnabled === true, 'La protección debe permanecer activada.');
   add('Inventario real disponible', Object.values(state.inventory ?? {}).some((stock) => stock > 0), 'Cargue unidades reales en Administración antes de abrir la campaña.');
   add('Campaña habilitada por el local', state.settings?.campaignActive === true, 'Active la campaña después de completar todos los controles anteriores.');

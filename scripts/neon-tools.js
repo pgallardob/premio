@@ -8,6 +8,7 @@ import { hashPassword } from '../server/auth.js';
 import { PostgresStore } from '../server/neon/store.js';
 import { validateState } from '../server/store.js';
 import { applyInventoryPlan } from '../server/inventory.js';
+import { Game } from '../server/game.js';
 
 const root = resolve(import.meta.dirname, '..');
 const target = JSON.parse(await readFile(join(root, 'deploy/neon-target.json'), 'utf8'));
@@ -52,10 +53,19 @@ async function prepareCredentials() {
 }
 
 const command = process.argv[2] ?? 'inspect';
-if (['inspect', 'migrate', 'verify', 'inventory-plan', 'inventory-apply'].includes(command)) {
+if (['inspect', 'migrate', 'verify', 'inventory-plan', 'inventory-apply', 'set-contact'].includes(command)) {
   if (command === 'inventory-apply' && process.argv[3] !== '--confirm=APPLY_INVENTORY') throw new Error('Explicit --confirm=APPLY_INVENTORY is required.');
+  if (command === 'set-contact' && (!process.argv[3] || process.argv[4] !== '--confirm=UPDATE_CONTACT')) throw new Error('Provide a public contact and --confirm=UPDATE_CONTACT.');
   const pool = new pg.Pool({ connectionString: await databaseUrl(), max: 2, connectionTimeoutMillis: 15_000 });
   try {
+    if (command === 'set-contact') {
+      const catalog = JSON.parse(await readFile(join(root, 'config/prizes.json'), 'utf8'));
+      const store = new PostgresStore(pool, catalog);
+      await store.initialize();
+      const game = new Game(store, catalog, { production: true, publicUrl: target.publicUrl });
+      const settings = await game.updateSettings({ promotionContact: process.argv[3] });
+      console.log(JSON.stringify({ promotionContact: settings.promotionContact, promotionReviewed: settings.promotionReviewed, campaignActive: settings.campaignActive }, null, 2));
+    }
     if (command.startsWith('inventory-')) {
       const plan = JSON.parse(await readFile(join(root, 'deploy/inventory.json'), 'utf8'));
       if (plan.projectId !== target.projectId || plan.branchId !== target.branchId) throw new Error('Inventory plan does not match the selected project and branch.');
@@ -110,4 +120,4 @@ if (['inspect', 'migrate', 'verify', 'inventory-plan', 'inventory-apply'].includ
   await mkdir(join(root, 'artifacts'), { recursive: true });
   await writeFile(join(root, 'artifacts/neon-deployment.json'), JSON.stringify(safe, null, 2));
   console.log(JSON.stringify(safe, null, 2));
-} else throw new Error('Use inspect, migrate, test, deploy, verify, inventory-plan, inventory-apply or diagnose.');
+} else throw new Error('Use inspect, migrate, test, deploy, verify, inventory-plan, inventory-apply, set-contact or diagnose.');

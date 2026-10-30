@@ -73,6 +73,30 @@ try {
   const session = await page.evaluate(() => JSON.parse(sessionStorage.getItem('olivos_session_v1')).token);
   await page.reload();
   await expect(page.locator('#admin-shell')).toBeVisible({ timeout: 30_000 });
+  if (process.env.NEON_VERIFY_PUBLICATION_UI === 'true') {
+    await page.locator('a[href="#settings"]').first().click();
+    await expect(page.locator('#setting-contact')).toHaveValue(process.env.NEON_EXPECT_PROMOTION_CONTACT);
+    await expect(page.locator('#setting-reviewed')).not.toBeChecked();
+    await expect(page.locator('#setting-active')).not.toBeChecked();
+    await page.locator('#setting-active').check();
+    const rejected = page.waitForResponse((response) => response.url() === `${api}/api/admin/settings` && response.request().method() === 'PATCH');
+    await page.getByRole('button', { name: 'Guardar la experiencia' }).click();
+    expect((await rejected).status()).toBe(400);
+    await expect(page.locator('#settings-message')).toContainText('revisaste las bases');
+    const geometry = await page.evaluate(() => ({
+      form: document.getElementById('settings-form').getBoundingClientRect().toJSON(),
+      button: document.querySelector('.settings-submit button').getBoundingClientRect().toJSON(),
+      message: document.getElementById('settings-message').getBoundingClientRect().toJSON(),
+    }));
+    expect(geometry.message.width).toBeGreaterThanOrEqual(geometry.form.width * .95);
+    expect(geometry.message.top).toBeGreaterThan(geometry.button.bottom);
+    await mkdir(join(root, 'artifacts/neon-browser'), { recursive: true });
+    await page.screenshot({ path: join(root, 'artifacts/neon-browser/publication-settings.png'), fullPage: true });
+    await page.reload();
+    await expect(page.locator('#setting-reviewed')).not.toBeChecked();
+    await expect(page.locator('#setting-active')).not.toBeChecked();
+    console.log('PASS Live contact and full-width activation feedback; missing owner review is rejected without activating.');
+  }
   if (expectedInventory) {
     await page.locator('a[href="#inventory"]').first().click();
     for (const item of expectedInventory) await expect(page.locator(`#stock-${item.prizeId}`)).toHaveValue(String(item.stock));
@@ -98,6 +122,11 @@ try {
   const manifestResponse = await context.request.get(`${base}manifest.webmanifest`);
   const manifest = await manifestResponse.json();
   expect(manifest.scope).toBe('/premio/');
+  if (process.env.NEON_EXPECT_PROMOTION_CONTACT) {
+    await page.goto(`${base}#bases`);
+    await expect(page.locator('#rules-dialog')).toBeVisible();
+    await expect(page.locator('#promotion-contact')).toContainText(process.env.NEON_EXPECT_PROMOTION_CONTACT);
+  }
   if (!preview) {
     const scope = await page.evaluate(async () => (await navigator.serviceWorker.ready).scope);
     expect(scope).toBe(base);

@@ -41,6 +41,9 @@ export function validateState(state) {
   const fingerprint = (value) => typeof value === 'string' && /^[a-f0-9]{64}$/.test(value);
   const code = (value) => typeof value === 'string' && /^OLV-[A-F0-9]{12}$/.test(value);
   if (typeof settings.cooldownEnabled !== 'boolean' || settings.cooldownHours !== 24
+    || (settings.promotionContact !== undefined && (typeof settings.promotionContact !== 'string' || settings.promotionContact.length > 200))
+    || (settings.promotionReviewed !== undefined && typeof settings.promotionReviewed !== 'boolean')
+    || (settings.promotionReviewedAt !== undefined && settings.promotionReviewedAt !== null && !validDate(settings.promotionReviewedAt))
     || typeof settings.campaignActive !== 'boolean' || typeof settings.dailyCodeEnabled !== 'boolean'
     || !Number.isInteger(settings.expiryDays) || settings.expiryDays < 1 || settings.expiryDays > 30
     || !state.lastParticipation || Array.isArray(state.lastParticipation) || typeof state.lastParticipation !== 'object'
