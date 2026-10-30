@@ -51,9 +51,11 @@ La validación presencial permanece activa y sin compra. No exigir ticket o pago
 
 ## Continuar con Instagram
 
-Cuenta indicada por el propietario: [@comercializadora_los_olivos_](https://www.instagram.com/comercializadora_los_olivos_). El propietario informa que todavía no es profesional; la conversión no se ha realizado ni verificado desde la configuración autenticada.
+Cuenta del local: [@comercializadora_los_olivos_](https://www.instagram.com/comercializadora_los_olivos_). **Conversión a Negocio (cuenta profesional de empresa) completada**, con perfil público y autorización expresa del propietario. Instagram confirmó que la cuenta de empresa está lista; al recargar la configuración aparecen **Cuenta profesional** y **Controles y herramientas para empresas**.
 
-1. Completar la conversión a una cuenta profesional; para el local se recomienda **Empresa**. Según la [ayuda oficial](https://help.instagram.com/502981923235522), esta configuración tiene perfil público. El propietario debe iniciar sesión personalmente; no compartir contraseñas ni códigos de acceso por chat. Continuar una pregunta a la vez.
+Se eligió **No usar mi información de contacto**. Los campos empresariales de correo, teléfono, WhatsApp y dirección se verificaron vacíos; no se agregaron datos ni se vincularon cuentas de Facebook, publicidad o suscripciones. La conversión por sí sola no verifica seguidores ni conecta la promoción con la API.
+
+1. Confirmar si el propietario ya tiene una cuenta en Meta for Developers y una aplicación para configurar el producto Instagram con inicio de sesión de Instagram. El propietario debe iniciar sesión personalmente; no compartir contraseñas ni códigos de acceso por chat. Continuar una pregunta a la vez.
 2. Definir el contrato de verificación antes de implementar el requisito. La cuenta, aplicación Meta, permisos y credenciales todavía no están conectados.
 3. Revisar inventario y reservas antes de reponer; no repetir la carga inicial ni restaurar historial. Mantener pendientes las comprobaciones Android/iPhone físicas y un canje comercial de un solo uso.
 4. Configurar respaldo PostgreSQL externo, calendario y verificación de restauración.
