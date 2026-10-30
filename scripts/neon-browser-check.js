@@ -33,8 +33,16 @@ try {
   page.on('pageerror', (error) => errors.push(error.message));
   const statusResponse = page.waitForResponse((response) => response.url() === `${api}/api/status`);
   await page.goto(base);
-  expect((await statusResponse).status()).toBe(200);
-  await expect(page.locator('.prize-card')).toHaveCount(3);
+  const response = await statusResponse;
+  expect(response.status()).toBe(200);
+  const expectedInventory = process.env.NEON_VERIFY_INITIAL_INVENTORY === 'true'
+    ? JSON.parse(await readFile(join(root, 'deploy/inventory.json'), 'utf8')).items : null;
+  if (expectedInventory) {
+    const status = await response.json();
+    expect(status.availableStock).toBe(expectedInventory.reduce((sum, item) => sum + item.stock, 0));
+    expect(status.prizes.map((prize) => ({ id: prize.id, stock: prize.stock }))).toEqual(expectedInventory.map((item) => ({ id: item.prizeId, stock: item.stock })));
+  }
+  await expect(page.locator('.prize-card')).toHaveCount(5);
   await expect(page.locator('#campaign-status-label')).toHaveText('Experiencia en pausa');
   await expect(page.locator('#participate-button')).toBeDisabled();
   expect(await page.locator('.prize-card__image').evaluateAll(async (images) => {
@@ -55,7 +63,7 @@ try {
     await page.setViewportSize({ width, height: 844 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
   }
-  console.log('PASS Connected Pages uses real Neon CORS, persistent device identity and correctly paused zero-stock UI.');
+  console.log('PASS Connected Pages uses real Neon CORS, persistent device identity and correctly paused campaign UI.');
 
   await page.goto(`${base}admin.html`);
   await expect(page.locator('#login-button')).toBeEnabled();
@@ -65,6 +73,10 @@ try {
   const session = await page.evaluate(() => JSON.parse(sessionStorage.getItem('olivos_session_v1')).token);
   await page.reload();
   await expect(page.locator('#admin-shell')).toBeVisible({ timeout: 30_000 });
+  if (expectedInventory) {
+    await page.locator('a[href="#inventory"]').first().click();
+    for (const item of expectedInventory) await expect(page.locator(`#stock-${item.prizeId}`)).toHaveValue(String(item.stock));
+  }
   await page.locator('a[href="#coupons"]').first().click();
   const download = page.waitForEvent('download');
   await page.locator('#panel-coupons a[download]').click();

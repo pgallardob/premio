@@ -32,7 +32,7 @@ try {
   page.on('console', (entry) => { if (entry.type() === 'error') errors.push(entry.text()); });
   await page.goto(base);
   expect(await page.locator('script[src*="app.js"]').getAttribute('src')).toContain('?v=');
-  await expect(page.locator('.prize-card')).toHaveCount(3);
+  await expect(page.locator('.prize-card')).toHaveCount(5);
   await expect(page.locator('#participate-button')).toBeDisabled();
   await expect(page.locator('#participation-guidance')).toContainText('Servidor pendiente');
   await expect(page.locator('#campaign-status-label')).toContainText('Servidor pendiente');

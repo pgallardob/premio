@@ -23,6 +23,14 @@ export class PostgresStore {
       const state = initialState(this.catalog, this.defaults);
       validateState(state);
       await client.query(`INSERT INTO ${this.schema}.state (id, document) VALUES (1, $1::jsonb) ON CONFLICT (id) DO NOTHING`, [JSON.stringify(state)]);
+      const { rows } = await client.query(`SELECT document FROM ${this.schema}.state WHERE id = 1 FOR UPDATE`);
+      const existing = rows[0].document;
+      validateState(existing);
+      const missing = this.catalog.filter((prize) => !Object.hasOwn(existing.inventory, prize.id));
+      for (const prize of missing) existing.inventory[prize.id] = prize.initialStock;
+      if (missing.length) {
+        await client.query(`UPDATE ${this.schema}.state SET document = $1::jsonb, updated_at = now() WHERE id = 1`, [JSON.stringify(existing)]);
+      }
       await client.query('COMMIT');
     } catch (error) {
       await client.query('ROLLBACK');

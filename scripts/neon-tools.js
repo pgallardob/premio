@@ -7,6 +7,7 @@ import pg from 'pg';
 import { hashPassword } from '../server/auth.js';
 import { PostgresStore } from '../server/neon/store.js';
 import { validateState } from '../server/store.js';
+import { applyInventoryPlan } from '../server/inventory.js';
 
 const root = resolve(import.meta.dirname, '..');
 const target = JSON.parse(await readFile(join(root, 'deploy/neon-target.json'), 'utf8'));
@@ -51,9 +52,19 @@ async function prepareCredentials() {
 }
 
 const command = process.argv[2] ?? 'inspect';
-if (['inspect', 'migrate', 'verify'].includes(command)) {
+if (['inspect', 'migrate', 'verify', 'inventory-plan', 'inventory-apply'].includes(command)) {
+  if (command === 'inventory-apply' && process.argv[3] !== '--confirm=APPLY_INVENTORY') throw new Error('Explicit --confirm=APPLY_INVENTORY is required.');
   const pool = new pg.Pool({ connectionString: await databaseUrl(), max: 2, connectionTimeoutMillis: 15_000 });
   try {
+    if (command.startsWith('inventory-')) {
+      const plan = JSON.parse(await readFile(join(root, 'deploy/inventory.json'), 'utf8'));
+      if (plan.projectId !== target.projectId || plan.branchId !== target.branchId) throw new Error('Inventory plan does not match the selected project and branch.');
+      const catalog = JSON.parse(await readFile(join(root, 'config/prizes.json'), 'utf8'));
+      const store = new PostgresStore(pool, catalog);
+      await store.initialize();
+      if (command === 'inventory-apply') console.log(JSON.stringify(await applyInventoryPlan(store, catalog, plan.items), null, 2));
+      else console.log(JSON.stringify({ active: store.state.settings.campaignActive, items: plan.items.map((item) => ({ ...item, currentStock: store.state.inventory[item.prizeId] ?? null })) }, null, 2));
+    }
     if (command === 'migrate') {
       const catalog = JSON.parse(await readFile(join(root, 'config/prizes.json'), 'utf8'));
       await new PostgresStore(pool, catalog).migrate();
@@ -99,4 +110,4 @@ if (['inspect', 'migrate', 'verify'].includes(command)) {
   await mkdir(join(root, 'artifacts'), { recursive: true });
   await writeFile(join(root, 'artifacts/neon-deployment.json'), JSON.stringify(safe, null, 2));
   console.log(JSON.stringify(safe, null, 2));
-} else throw new Error('Use inspect, migrate, test, deploy, verify or diagnose.');
+} else throw new Error('Use inspect, migrate, test, deploy, verify, inventory-plan, inventory-apply or diagnose.');

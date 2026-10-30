@@ -1,0 +1,11 @@
+{
+  "projectId": "spring-hill-80309581",
+  "branchId": "br-polished-violet-b4dyd4nr",
+  "items": [
+    { "prizeId": "opener", "stock": 20, "expectedStock": 0 },
+    { "prizeId": "cookies", "stock": 20, "expectedStock": 0 },
+    { "prizeId": "jokey", "stock": 10, "expectedStock": 0 },
+    { "prizeId": "tshirt", "stock": 5, "expectedStock": 0 },
+    { "prizeId": "planner", "stock": 3, "expectedStock": 0 }
+  ]
+}

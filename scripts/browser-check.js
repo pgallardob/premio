@@ -11,7 +11,7 @@ const artifacts = resolve(process.env.ARTIFACTS_DIR ?? 'artifacts/browser');
 await mkdir(artifacts, { recursive: true });
 const password = randomBytes(20).toString('hex');
 const config = { dataDir: directory, publicUrl: 'http://localhost', adminPasswordHash: await hashPassword(password), deviceSecret: randomBytes(32).toString('hex'),
-  initialSettings: { campaignActive: true, cooldownEnabled: false }, initialInventory: { refreshment: 12, snack: 10, coffee: 8 } };
+  initialSettings: { campaignActive: true, cooldownEnabled: false }, initialInventory: { opener: 12, cookies: 10, jokey: 8 } };
 const app = await createApplication(config);
 const errors = [];
 const results = [];
@@ -46,7 +46,7 @@ try {
   await check('Customer screen: local assets, no embedded code and six responsive widths', async () => {
     await page.goto(config.publicUrl);
     await expect(page.getByRole('button', { name: 'Descubrir mi suerte' })).toBeEnabled();
-    await expect(page.locator('.prize-card')).toHaveCount(3);
+    await expect(page.locator('.prize-card')).toHaveCount(5);
     await expect(page.locator('.edition, .universe-coordinate')).toHaveCount(0);
     await expect(page.locator('.experience-card')).not.toContainText('VOL. 01');
     await expect(page.locator('.experience-card')).not.toContainText('33°36');
@@ -113,7 +113,7 @@ try {
         if (await link.isVisible()) await link.click();
         else await page.goto(`${config.publicUrl}/#${hash}`);
         await expect(page).toHaveURL(new RegExp(`#${hash}$`));
-        await expect(page.locator('.prize-card')).toHaveCount(3);
+        await expect(page.locator('.prize-card')).toHaveCount(5);
         const layout = await page.evaluate(({ hash, sectionId }) => ({
           heading: document.getElementById(hash).getBoundingClientRect().toJSON(),
           section: document.getElementById(sectionId).getBoundingClientRect().toJSON(),
@@ -313,16 +313,16 @@ try {
     await page.getByRole('button', { name: 'Guardar la experiencia' }).click();
     await expect(page.locator('#settings-message')).toContainText('correctamente');
     await page.locator('[data-panel="inventory"]').click();
-    await page.locator('#stock-coffee').fill('77');
+    await page.locator('#stock-jokey').fill('77');
     await page.locator('#inventory-title').click();
     const updatedSnapshot = page.waitForResponse(async (response) => response.url().endsWith('/api/admin/dashboard')
-      && response.status() === 200 && (await response.json()).inventory.some((prize) => prize.id === 'coffee' && prize.stock === 6), { timeout: 8000 });
-    await app.game.updateInventory('coffee', { stock: 6 });
+      && response.status() === 200 && (await response.json()).inventory.some((prize) => prize.id === 'jokey' && prize.stock === 6), { timeout: 8000 });
+    await app.game.updateInventory('jokey', { stock: 6 });
     await updatedSnapshot;
-    await expect(page.locator('#stock-coffee')).toHaveValue('77');
-    await page.locator('#stock-coffee').fill('6');
-    await page.getByRole('button', { name: 'Actualizar stock de Un momento de calma' }).click();
-    await expect(page.locator('#stock-coffee')).toHaveValue('6');
+    await expect(page.locator('#stock-jokey')).toHaveValue('77');
+    await page.locator('#stock-jokey').fill('6');
+    await page.getByRole('button', { name: 'Actualizar stock de Jokey' }).click();
+    await expect(page.locator('#stock-jokey')).toHaveValue('6');
   });
 
   await check('Admin recovers from a connection failure without reloading or discarding data', async () => {
@@ -399,9 +399,9 @@ try {
     await page.getByRole('button', { name: 'Guardar la experiencia' }).click();
     await expect(page.locator('#settings-message')).toContainText('correctamente');
     await page.locator('[data-panel="inventory"]').click();
-    await page.locator('#stock-coffee').fill('7');
-    await page.getByRole('button', { name: 'Actualizar stock de Un momento de calma' }).click();
-    await expect(page.locator('#stock-coffee')).toHaveValue('7');
+    await page.locator('#stock-jokey').fill('7');
+    await page.getByRole('button', { name: 'Actualizar stock de Jokey' }).click();
+    await expect(page.locator('#stock-jokey')).toHaveValue('7');
     await page.goto(`${config.publicUrl}/cartel.html`);
     await expect(page.locator('#poster-url')).toHaveText(config.publicUrl);
     await noOverflow();

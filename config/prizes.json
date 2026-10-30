@@ -1,28 +1,46 @@
 [
   {
-    "id": "refreshment",
-    "name": "Una pausa refrescante",
-    "description": "Una bebida individual para refrescar tu día.",
-    "category": "BEBIDAS",
-    "image": "/assets/images/refreshment.svg",
+    "id": "opener",
+    "name": "Destapador Monster",
+    "description": "Un destapador Monster para tu colección.",
+    "category": "ACCESORIOS",
+    "image": "/assets/images/opener.svg",
     "initialStock": 0,
     "featured": true
   },
   {
-    "id": "snack",
-    "name": "Un pequeño antojo",
-    "description": "Un snack individual para ese momento de antojo.",
-    "category": "SNACKS",
-    "image": "/assets/images/snack.svg",
+    "id": "cookies",
+    "name": "Galletas mini Costa",
+    "description": "Unas galletas mini Costa para disfrutar.",
+    "category": "GALLETAS",
+    "image": "/assets/images/cookies.svg",
     "initialStock": 0,
     "featured": false
   },
   {
-    "id": "coffee",
-    "name": "Un momento de calma",
-    "description": "Un café individual para disfrutar sin apuro.",
-    "category": "CAFÉ",
-    "image": "/assets/images/coffee.svg",
+    "id": "jokey",
+    "name": "Jokey",
+    "description": "Un Jokey disponible para ti en el local.",
+    "category": "ACCESORIOS",
+    "image": "/assets/images/jokey.svg",
+    "initialStock": 0,
+    "featured": false
+  },
+  {
+    "id": "tshirt",
+    "name": "Polera",
+    "description": "Una polera para sumar a tus favoritos.",
+    "category": "VESTUARIO",
+    "image": "/assets/images/tshirt.svg",
+    "initialStock": 0,
+    "featured": false
+  },
+  {
+    "id": "planner",
+    "name": "Agenda",
+    "description": "Una agenda para tus próximas ideas.",
+    "category": "PAPELERÍA",
+    "image": "/assets/images/planner.svg",
     "initialStock": 0,
     "featured": false
   }

@@ -1,19 +1,21 @@
 # Operar Los Olivos desde el local
 
-La web y la API ya están publicadas con HTTPS en GitHub Pages y Neon. La campaña limpia continúa pausada, sin participaciones, cupones ni stock cargado. Antes de abrir, complete los requisitos de [Neon](NEON.md). La guía de [Producción](PRODUCCION.md) describe la alternativa con servidor propio y archivo.
+La web y la API utilizan HTTPS en GitHub Pages y Neon. La campaña continúa pausada, sin participaciones ni cupones, con 58 unidades cargadas. Antes de abrir, complete los requisitos de [Neon](NEON.md). La guía de [Producción](PRODUCCION.md) describe la alternativa con servidor propio y archivo.
 
-## Próxima sesión: inventario acordado
+## Inventario vigente
 
-El 28 de octubre de 2026, el propietario indicó las siguientes cantidades y solicitó posponer su carga hasta la próxima sesión:
+El 30 de octubre de 2026 se aplicó el catálogo real solicitado por el propietario. Estas cantidades sustituyen el plan anterior de bebidas, snacks y café:
 
-| Premio | Identificador | Unidades acordadas para cargar |
+| Premio | Identificador | Unidades cargadas |
 |---|---|---|
-| Bebida | `refreshment` | 20 |
-| Snack | `snack` | 20 |
-| Café | `coffee` | 20 |
-| **Total** | | **60** |
+| Destapador Monster | `opener` | 20 |
+| Galletas mini Costa | `cookies` | 20 |
+| Jokey | `jokey` | 10 |
+| Polera | `tshirt` | 5 |
+| Agenda | `planner` | 3 |
+| **Total** | | **58** |
 
-**Pendiente, no aplicado.** No activar ni cargar estas cantidades automáticamente. Antes de hacerlo, consulte el inventario y las reservas actuales para no sobrescribir cambios posteriores. Los valores son unidades disponibles; una reserva vigente no debe contarse dos veces.
+**Carga aplicada, campaña no activada.** Las cifras son unidades disponibles al efectuar la carga; cambian al reservar o vencer cupones. Antes de reponer, consulte inventario y reservas para no sobrescribir cambios posteriores ni contar dos veces una reserva. No vuelva a ejecutar el plan inicial: sus comprobaciones de stock previo rechazan una aplicación repetida.
 
 ## Preparar la campaña
 

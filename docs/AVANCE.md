@@ -1,6 +1,6 @@
-# Estado publicado y próxima sesión · 0.2.1
+# Estado publicado e inventario real · 0.2.2
 
-Actualizado el 28 de octubre de 2026. La web está publicada en GitHub Pages y conectada a Neon Functions y PostgreSQL en el plan Free. No depende de mantener encendida la computadora. **La campaña continúa pausada; el inventario acordado se cargará en la próxima sesión, no hoy.**
+Actualizado el 30 de octubre de 2026. La web utiliza GitHub Pages y Neon Functions con PostgreSQL en el plan Free. No depende de mantener encendida la computadora. **El inventario real ya se cargó: 58 unidades de cinco productos. La campaña continúa pausada; cargar stock no equivale a activarla.**
 
 ## Accesos
 
@@ -11,11 +11,13 @@ Actualizado el 28 de octubre de 2026. La web está publicada en GitHub Pages y c
 
 La contraseña administrativa de publicación es distinta de la local. Se conserva en un archivo privado fuera del repositorio; no se publica ni se copia en esta documentación.
 
-## Inventario acordado, todavía pendiente de carga
+## Inventario real cargado
 
-El propietario indicó **20 bebidas, 20 snacks y 20 cafés: 60 unidades en total**, y solicitó retomar la carga mañana. Los identificadores y el procedimiento están en [Operación del local](OPERACION.md#próxima-sesión-inventario-acordado).
+El propietario reemplazó el plan anterior por **20 destapadores Monster, 20 galletas mini Costa, 10 Jokey, 5 poleras y 3 agendas: 58 unidades en total**. La carga se aplicó en una transacción de PostgreSQL, con controles para no sobrescribir cambios posteriores ni duplicar la reposición. Consulte [Operación del local](OPERACION.md#inventario-vigente).
 
-Último estado verificado: campaña pausada, stock cero, cero participaciones, cupones y auditoría; protección obligatoria de 24 horas. No se cargaron esas 60 unidades ni se activó la campaña. El botón «Volveremos a sorprenderte» permanece deshabilitado por ese estado, no por un fallo de conexión con Neon.
+Último estado verificado: campaña pausada, stock 58, cero participaciones y cupones, cinco movimientos de inventario en auditoría y protección obligatoria de 24 horas. El botón «Volveremos a sorprenderte» permanece deshabilitado porque la campaña no está activa, no por falta de stock o conexión. El plan anterior de bebidas, snacks y café quedó sin efecto y no debe aplicarse.
+
+El catálogo usa identificadores nuevos y cinco ilustraciones referenciales; no son fotografías de los productos. Los identificadores anteriores y sus recursos se conservan para no romper posibles referencias históricas. Los valores iniciales de una instalación nueva siguen en cero.
 
 ## Implementado y comprobado
 
@@ -27,14 +29,13 @@ El propietario indicó **20 bebidas, 20 snacks y 20 cafés: 60 unidades en total
 - Registros anteriores eliminados sin restaurarlos, sin modo de prueba público ni premios ficticios en producción.
 - Despliegue local con archivo y alternativa Docker/Caddy conservados, separados de la publicación en Neon.
 
-Evidencia: 23 pruebas existentes, ocho comprobaciones contra PostgreSQL real, 19 recorridos de interfaz y siete comprobaciones PWA aprobadas. Chrome verificó además la web pública contra Neon, inicio y cierre de sesión, CSV, manifiesto y service worker. Los esquemas de verificación se eliminaron; no se generaron participaciones ni cupones reales.
+Evidencia: 23 pruebas existentes, ocho pruebas de carga de inventario y nueve comprobaciones contra PostgreSQL real; 19 recorridos de Chrome comprueban el catálogo de cinco productos y sus diseños compactos, junto con siete comprobaciones PWA y la compilación estática. Los esquemas de verificación se eliminan al terminar; no se generan participaciones ni cupones reales para probar la publicación.
 
 ## Retomar en la próxima sesión
 
-1. Consultar el estado actual de Neon antes de modificarlo; respetar cualquier cambio posterior del propietario.
-2. Cargar las cantidades acordadas desde administración, sin cambiar los valores seguros de nuevas instalaciones ni restaurar historial.
-3. Completar contacto y revisión de bases/privacidad antes de autorizar la activación.
-4. Comprobar la participación desde computador y teléfonos físicos, el QR y un canje de un solo uso.
-5. Configurar respaldo PostgreSQL externo, calendario y verificación de restauración.
+1. Completar contacto y revisión de bases/privacidad antes de autorizar la activación.
+2. Revisar el inventario y las reservas antes de cualquier reposición; no repetir la carga inicial ya aplicada ni restaurar historial.
+3. Comprobar la participación desde computador y teléfonos físicos, el QR y un canje de un solo uso después de activar.
+4. Configurar respaldo PostgreSQL externo, calendario y verificación de restauración.
 
 No hay una activación automática programada. Consulte [Neon](NEON.md) y [Revisión de producción](REVISION_PRODUCCION.md) para los límites gratuitos y pendientes de apertura.

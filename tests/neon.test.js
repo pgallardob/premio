@@ -8,6 +8,8 @@ import { PostgresStore } from '../server/neon/store.js';
 import { NeonAuth, PostgresRateLimiter } from '../server/neon/auth.js';
 import { createNeonHandler } from '../server/neon/handler.js';
 import { Game } from '../server/game.js';
+import { applyInventoryPlan } from '../server/inventory.js';
+import inventoryPlan from '../deploy/inventory.json' with { type: 'json' };
 
 const connectionString = process.env.NEON_VERIFY_DATABASE_URL;
 const password = randomBytes(20).toString('hex');
@@ -19,7 +21,7 @@ async function fixture(t) {
   const schema = `premio_verify_${randomBytes(8).toString('hex')}`;
   const config = { publicUrl: 'https://pgallardob.github.io/premio', adminPasswordHash: passwordHash,
     deviceSecret: randomBytes(32).toString('hex'), production: true, promotionReviewed: true, promotionContact: 'Verification only' };
-  const store = new PostgresStore(pool, catalog, { schema, defaults: { settings: { campaignActive: true, interval: 2 }, inventory: { refreshment: 1, snack: 0, coffee: 0 } } });
+  const store = new PostgresStore(pool, catalog, { schema, defaults: { settings: { campaignActive: true, interval: 2 }, inventory: { opener: 1, cookies: 0, jokey: 0 } } });
   await store.migrate();
   t.after(async () => {
     // Only remove this fixture's unique schema, never the production schema.
@@ -81,7 +83,7 @@ integration('Postgres serializes concurrent winners across independent stores wi
   assert(results.filter((result) => result.status === 'rejected').every((result) => result.reason.code === 'OUT_OF_STOCK'));
   await store.initialize();
   assert.equal(store.state.totalParticipations, 2);
-  assert.equal(store.state.inventory.refreshment, 0);
+  assert.equal(store.state.inventory.opener, 0);
 });
 
 integration('Postgres idempotency and mandatory cooldown survive a new application instance', async (t) => {
@@ -131,13 +133,37 @@ integration('Neon redemption remains single use and private wallet ownership is 
 });
 
 integration('Postgres rolls back failed operations and migrations preserve existing records', async (t) => {
-  const { store } = await fixture(t);
-  await assert.rejects(store.transaction((state) => { state.inventory.refreshment = 99; throw new Error('rollback'); }), /rollback/);
+  const { store, pool } = await fixture(t);
+  await assert.rejects(store.transaction((state) => { state.inventory.opener = 99; throw new Error('rollback'); }), /rollback/);
   await store.initialize();
-  assert.equal(store.state.inventory.refreshment, 1);
-  await store.transaction((state) => { state.inventory.refreshment = 3; });
+  assert.equal(store.state.inventory.opener, 1);
+  await store.transaction((state) => { state.inventory.opener = 3; });
   await store.migrate();
-  assert.equal(store.state.inventory.refreshment, 3);
+  assert.equal(store.state.inventory.opener, 3);
+  const expanded = new PostgresStore(pool, [...catalog, { ...catalog[0], id: 'future-prize', initialStock: 0 }], { schema: store.schema.slice(1, -1) });
+  await expanded.migrate();
+  assert.equal(expanded.state.inventory.opener, 3);
+  assert.equal(expanded.state.inventory['future-prize'], 0);
+  await expanded.transaction((state) => { state.inventory['future-prize'] = 7; });
+  await expanded.migrate();
+  assert.equal(expanded.state.inventory['future-prize'], 7);
+});
+
+integration('Postgres inventory plan is atomic and concurrent retries cannot restock twice', async (t) => {
+  const { store, pool } = await fixture(t);
+  await store.transaction((state) => {
+    state.settings.campaignActive = false;
+    for (const prize of catalog) state.inventory[prize.id] = 0;
+  });
+  const another = new PostgresStore(pool, catalog, { schema: store.schema.slice(1, -1) });
+  await another.initialize();
+  const results = await Promise.allSettled([store, another].map((writer) => applyInventoryPlan(writer, catalog, inventoryPlan.items)));
+  assert.equal(results.filter((result) => result.status === 'fulfilled').length, 1);
+  assert.equal(results.find((result) => result.status === 'rejected').reason.code, 'INVENTORY_CHANGED');
+  await store.initialize();
+  assert.equal(Object.values(store.state.inventory).reduce((sum, value) => sum + value, 0), 58);
+  assert.equal(store.state.audit.length, 5);
+  assert.equal(store.state.settings.campaignActive, false);
 });
 
 integration('Neon login throttling persists across cold starts and ignores spoofed forwarding headers', async (t) => {

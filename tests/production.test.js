@@ -72,7 +72,7 @@ test('fresh installations are paused, empty and protected; health reveals no bus
 });
 
 test('production activation requires review, contact and stock; host and secure cookies are enforced', async (t) => {
-  const { app, config } = await sandbox(t, { production: true, publicUrl: env.PUBLIC_URL, initialInventory: { coffee: 1 } });
+  const { app, config } = await sandbox(t, { production: true, publicUrl: env.PUBLIC_URL, initialInventory: { jokey: 1 } });
   assert.throws(() => app.game.updateSettings({ cooldownEnabled: false }), (error) => error.status === 400);
   assert.throws(() => app.game.updateSettings({ campaignActive: true }), (error) => error.status === 400);
   config.promotionReviewed = true;
@@ -85,12 +85,12 @@ test('production activation requires review, contact and stock; host and secure 
   assert.equal(response.status, 200);
   assert.match(response.headers['set-cookie'].join(';'), /Secure/);
   assert.match(response.headers['content-security-policy'], /worker-src 'self'/);
-  await app.game.updateInventory('coffee', { stock: 0 });
+  await app.game.updateInventory('jokey', { stock: 0 });
   await assert.rejects(app.game.updateSettings({ campaignActive: true }), (error) => error.status === 400);
 });
 
 test('destructive reset requires explicit confirmation and a stopped writer, then removes all records', async (t) => {
-  const { app, directory } = await sandbox(t, { initialSettings: { campaignActive: true, cooldownEnabled: false, interval: 2 }, initialInventory: { coffee: 2 } });
+  const { app, directory } = await sandbox(t, { initialSettings: { campaignActive: true, cooldownEnabled: false, interval: 2 }, initialInventory: { jokey: 2 } });
   await app.game.participate('device', randomUUID(), {});
   await app.game.participate('device', randomUUID(), {});
   assert.equal(cli('scripts/reset-data.js', directory, ['--confirm=DELETE_ALL_RECORDS']).status, 1);
@@ -112,7 +112,7 @@ test('destructive reset requires explicit confirmation and a stopped writer, the
 });
 
 test('backup and restoration are exclusive, validated and restore a paused protected state', async (t) => {
-  const { app, directory } = await sandbox(t, { initialSettings: { campaignActive: true, cooldownEnabled: false, interval: 2 }, initialInventory: { coffee: 2 } });
+  const { app, directory } = await sandbox(t, { initialSettings: { campaignActive: true, cooldownEnabled: false, interval: 2 }, initialInventory: { jokey: 2 } });
   await app.game.participate('device', randomUUID(), {});
   await app.game.participate('device', randomUUID(), {});
   await app.game.updateSettings({ cooldownEnabled: true });

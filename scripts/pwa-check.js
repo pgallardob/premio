@@ -10,7 +10,7 @@ const directory = await mkdtemp(join(tmpdir(), 'opencode', 'premio-pwa-'));
 const artifacts = resolve(process.env.ARTIFACTS_DIR ?? 'artifacts/pwa');
 await mkdir(artifacts, { recursive: true });
 const config = { dataDir: directory, publicUrl: 'http://localhost', deviceSecret: randomBytes(32).toString('hex'), adminPasswordHash: await hashPassword(randomBytes(20).toString('hex')),
-  initialSettings: { campaignActive: true, cooldownEnabled: false, interval: 2 }, initialInventory: { coffee: 2 } };
+  initialSettings: { campaignActive: true, cooldownEnabled: false, interval: 2 }, initialInventory: { jokey: 2 } };
 const app = await createApplication(config);
 const results = [];
 const check = async (name, action) => { await action(); results.push(name); console.log(`PASS ${name}`); };

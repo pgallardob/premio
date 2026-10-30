@@ -18,9 +18,22 @@ npm run neon:deploy
 
 La migración crea únicamente el esquema `premio` y sus tablas si faltan. No reemplaza un estado existente ni modifica otras aplicaciones. Una instalación nueva permanece pausada, sin stock y con protección de 24 horas.
 
+Cuando se agregan productos al catálogo, la migración incorpora únicamente sus identificadores faltantes con stock inicial seguro, sin reiniciar unidades existentes ni eliminar referencias a productos retirados.
+
 En Windows, use la CLI instalada con npm y apunte `NEON_CLI_PATH` a su `dist/cli.js` si el ejecutable portable falla al evaluar `neon.ts`. La distribución portable 8.13.1 presentó un error de empaquetado de `jiti`; no es necesario cambiar las credenciales ni el plan para resolverlo.
 
-El despliegue genera credenciales nuevas en el directorio privado: `premio-deployment.env` y `premio-admin-password.txt`. No se publican ni se imprimen. `neon deploy --no-env-pull` evita sobrescribir el `.env` local. La configuración declara únicamente la función `api`, sin actualizaciones del plan ni ajustes de cómputo.
+El despliegue genera credenciales nuevas únicamente cuando faltan los archivos privados: `premio-deployment.env` y `premio-admin-password.txt`. No se publican ni se imprimen. `neon deploy --no-env-pull` evita sobrescribir el `.env` local. La configuración declara únicamente la función `api`, sin actualizaciones del plan ni ajustes de cómputo.
+
+## Carga inicial de inventario
+
+`deploy/inventory.json` registra el plan solicitado y el stock previo esperado por producto. La carga de 58 unidades del 30 de octubre de 2026 ya se aplicó; estos comandos son una referencia operativa, no una tarea pendiente:
+
+```sh
+node scripts/neon-tools.js inventory-plan
+node scripts/neon-tools.js inventory-apply --confirm=APPLY_INVENTORY
+```
+
+La aplicación exige campaña pausada, todos los productos del catálogo y coincidencia de los valores previos después de conciliar vencimientos. Reutiliza la validación y auditoría de inventario en una sola transacción: si un dato falla, no se carga ningún producto. Una repetición del plan aplicado se rechaza; para una reposición futura debe revisarse y actualizarse el plan con los valores vigentes. No activa la campaña ni emite premios; conserva contador e historial y mantiene los valores iniciales seguros de nuevas instalaciones.
 
 ## Conectar la interfaz
 

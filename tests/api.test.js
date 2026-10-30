@@ -15,7 +15,7 @@ async function fixture(t) {
   const directory = await mkdtemp(join(tmpdir(), 'opencode', 'premio-api-'));
   let now = Date.parse('2026-10-27T15:00:00Z');
   const config = { dataDir: directory, publicUrl: 'http://localhost', adminPasswordHash: passwordHash, deviceSecret: randomBytes(32).toString('hex'), clock: () => now,
-    initialSettings: { campaignActive: true, cooldownEnabled: false }, initialInventory: { refreshment: 12, snack: 10, coffee: 8 } };
+    initialSettings: { campaignActive: true, cooldownEnabled: false }, initialInventory: { opener: 12, cookies: 10, jokey: 8 } };
   const app = await createApplication(config);
   await new Promise((resolve) => app.server.listen(0, '127.0.0.1', resolve));
   config.publicUrl = `http://127.0.0.1:${app.server.address().port}`;
@@ -55,7 +55,7 @@ test('default contract: page views do not count and exactly participation 20 win
   assert.equal(status.data.rules.interval, 20);
   assert.equal(status.data.rules.expiryDays, 5);
   assert.equal(Object.hasOwn(status.data, 'testMode'), false);
-  assert.equal(status.data.prizes.length, 3);
+  assert.equal(status.data.prizes.length, 5);
   assert.equal((await admin('/api/admin/dashboard')).data.totals.participations, 0);
   for (let index = 1; index <= 20; index += 1) {
     const result = await visitor.participate();
@@ -196,7 +196,7 @@ test('pause and empty stock do not count rejected participations', async (t) => 
   await admin('/api/admin/settings', { method: 'PATCH', body: { campaignActive: false } });
   assert.equal((await visitor.participate()).data.error.code, 'CAMPAIGN_PAUSED');
   await admin('/api/admin/settings', { method: 'PATCH', body: { campaignActive: true } });
-  for (const prize of ['refreshment', 'snack', 'coffee']) await admin(`/api/admin/inventory/${prize}`, { method: 'PATCH', body: { stock: 0 } });
+  for (const prize of ['opener', 'cookies', 'jokey', 'tshirt', 'planner']) await admin(`/api/admin/inventory/${prize}`, { method: 'PATCH', body: { stock: 0 } });
   const result = await visitor.participate();
   assert.equal(result.status, 503);
   assert.equal(result.data.error.code, 'OUT_OF_STOCK');
@@ -206,11 +206,11 @@ test('pause and empty stock do not count rejected participations', async (t) => 
 test('only in-stock prizes are selected and another win cannot reserve a missing unit', async (t) => {
   const { visitor, admin } = await fixture(t);
   await admin('/api/admin/settings', { method: 'PATCH', body: { interval: 2 } });
-  for (const id of ['refreshment', 'snack']) await admin(`/api/admin/inventory/${id}`, { method: 'PATCH', body: { stock: 0 } });
-  await admin('/api/admin/inventory/coffee', { method: 'PATCH', body: { stock: 1 } });
+  for (const id of ['opener', 'cookies']) await admin(`/api/admin/inventory/${id}`, { method: 'PATCH', body: { stock: 0 } });
+  await admin('/api/admin/inventory/jokey', { method: 'PATCH', body: { stock: 1 } });
   await visitor.participate();
   const winning = await visitor.participate();
-  assert.equal(winning.data.coupon.prize.id, 'coffee');
+  assert.equal(winning.data.coupon.prize.id, 'jokey');
   assert.equal((await visitor.participate()).status, 503);
   assert.equal((await admin('/api/admin/dashboard')).data.totals.stock, 0);
 });
@@ -234,7 +234,7 @@ test('configuration validates types, unknown fields and cycle-boundary frequency
   assert.equal((await admin('/api/admin/settings', { method: 'PATCH', body: { interval: '2' } })).status, 400);
   assert.equal((await admin('/api/admin/settings', { method: 'PATCH', body: { interval: 0 } })).status, 400);
   assert.equal((await admin('/api/admin/settings', { method: 'PATCH', body: { admin: true } })).status, 400);
-  assert.equal((await admin('/api/admin/inventory/coffee', { method: 'PATCH', body: { stock: -1 } })).status, 400);
+  assert.equal((await admin('/api/admin/inventory/jokey', { method: 'PATCH', body: { stock: -1 } })).status, 400);
   assert.equal((await visitor('/api/participations', { method: 'POST', body: {} })).status, 400);
   await visitor.participate();
   const result = await admin('/api/admin/settings', { method: 'PATCH', body: { interval: 2 } });
