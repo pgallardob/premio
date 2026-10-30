@@ -78,6 +78,10 @@ export function createApiRouter({ game, auth, limiter, qr, config }) {
       return sendJson(response, await game.status());
     }
     if (pathname === '/api/visits/current' && method === 'GET') return sendJson(response, await game.visits.current(auth.device(request, response)));
+    if (pathname === '/api/instagram/clicks' && method === 'POST') {
+      await limiter.take(`instagram:${ip}`, 30, 60_000);
+      return sendJson(response, await game.instagramClicks.record(request.headers['idempotency-key'], await readJson(request)));
+    }
     if (pathname === '/api/visits' && method === 'POST') {
       await limiter.take(`visit:${ip}`, 20, 60_000);
       requireFields(await readJson(request), []);

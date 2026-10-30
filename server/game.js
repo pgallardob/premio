@@ -1,6 +1,7 @@
 import { createHmac, randomBytes, randomInt } from 'node:crypto';
 import { AppError, requireFields, requireInput } from './errors.js';
 import { VisitService, requireApprovedVisit, pruneVisits } from './visits.js';
+import { InstagramClicks, instagramClickSummary } from './instagram-clicks.js';
 
 const DAY = 86_400_000;
 const timezone = 'America/Santiago';
@@ -19,6 +20,7 @@ export function promotionReadiness(settings, config = {}) {
 export class Game {
   constructor(store, catalog, config, clock = Date.now) {
     Object.assign(this, { store, catalog, config, clock });
+    this.instagramClicks = new InstagramClicks(store, clock);
     this.visits = new VisitService({ store, catalog, hashDevice: (value) => this.hash(value), clock,
       prepare: (state) => this.expire(state), ready: (state) => {
         const readiness = promotionReadiness(state.settings, config);
@@ -320,6 +322,7 @@ export class Game {
           stock: Object.values(state.inventory).reduce((sum, stock) => sum + stock, 0),
         },
         cycleProgress: state.cycleProgress,
+        instagramClicks: instagramClickSummary(state, this.clock()),
         settings: this.safeSettings(state.settings),
         inventory: this.prizes(state),
         coupons,

@@ -1,6 +1,7 @@
 import { mkdir, open, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { validateInstagramClicks } from './instagram-clicks.js';
 
 export function initialState(catalog, defaults = {}) {
   return {
@@ -30,6 +31,7 @@ export function initialState(catalog, defaults = {}) {
 }
 
 export function validateState(state) {
+  validateInstagramClicks(state.instagramClicks);
   if (state.version !== 1 || !Array.isArray(state.participations) || !Array.isArray(state.coupons)
     || !state.settings || !state.inventory || !state.lastParticipation || !Array.isArray(state.audit)
     || !Number.isSafeInteger(state.totalParticipations) || state.totalParticipations < 0

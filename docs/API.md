@@ -20,6 +20,7 @@ Un resultado aceptado siempre responde `200`, sea ganador, no ganador o repetici
 | GET | `/api/status` | Campaña, reglas, catálogo y stock disponible. |
 | GET | `/healthz` | Salud mínima del proceso, sin información de premios o sesiones. |
 | POST | `/api/participations` | Participación y cupón privado si ganó. |
+| POST | `/api/instagram/clicks` | Registrar un clic declarado con origen y clave idempotente; no cuenta participaciones ni verifica visitas o seguidores. |
 | GET / POST | `/api/visits/current` / `/api/visits` | Leer o solicitar una validación vinculada al navegador, sin participar. |
 | POST | `/api/visits/cancel` | Cancelar una solicitud propia todavía no consumida. |
 | GET | `/api/visits/{visitId}/qr` | QR de búsqueda administrativa; no concede permiso. |
@@ -34,6 +35,8 @@ El código visible `OLV-…` no permite consultar cupones públicamente. Solo la
 Al abrir un enlace privado, la interfaz envía `{ "token": "..." }` a `/api/wallet/coupons` para conservar ese cupón en el navegador actual. Repetirlo devuelve `{ "saved": true }` sin duplicados. No transfiere el propietario original, no suma participaciones, no cambia el stock y no reactiva cupones canjeados o vencidos. Se permite guardar el cupón en hasta cien navegadores adicionales; después se devuelve `409 WALLET_LIMIT_REACHED`. Un código visible, un token desconocido o un origen externo no autorizan el guardado.
 
 ## Autenticación administrativa
+
+El [registro de clics de Instagram](INSTAGRAM_CLICS.md) es independiente de la identidad y de las reglas de participación. Solo acepta `source` (`home`, `result`, `coupon`) y la cabecera `Idempotency-Key`; no recibe tokens de cupón ni datos de Instagram. El panel privado devuelve `instagramClicks` con acumulados y hasta veinte registros recientes, sin las claves internas. No es una prueba para autorizar premios.
 
 `POST /api/admin/login` recibe `{ "password": "..." }`. Devuelve `csrfToken` y `expiresAt` y establece una cookie `olivos_session` en Node o el encabezado `X-Olivos-Session` en Neon. No guarde estas credenciales en código, HTML, `localStorage` ni documentación.
 

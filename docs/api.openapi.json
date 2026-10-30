@@ -29,6 +29,22 @@
         }
       }
     },
+    "/api/instagram/clicks": {
+      "post": {
+        "operationId": "recordInstagramClick",
+        "summary": "Record a client-reported outbound Instagram click only. Does not contact Meta, confirm profile loading/following, establish a device identity or affect participation/redemption. Global random event keys are deduplicated within the retained 1000-event/7-day window; aggregate counts persist.",
+        "parameters": [{ "in": "header", "name": "Idempotency-Key", "required": true, "schema": { "type": "string", "pattern": "^[\\w-]{16,80}$" } }],
+        "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "required": ["source"], "additionalProperties": false, "properties": { "source": { "enum": ["home", "result", "coupon"] } } }, "example": { "source": "home" } } } },
+        "responses": {
+          "200": { "description": "Committed or replayed event, not a verified visit or follow.", "content": { "application/json": { "schema": { "type": "object", "required": ["recorded", "clickedAt", "replayed"], "additionalProperties": false, "properties": { "recorded": { "const": true }, "clickedAt": { "type": "string", "format": "date-time" }, "replayed": { "type": "boolean" } } } } } },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "403": { "$ref": "#/components/responses/Forbidden" },
+          "409": { "description": "CLICK_KEY_REUSED: retained event key belongs to a different source; no extra event counted." },
+          "429": { "$ref": "#/components/responses/RateLimited" },
+          "503": { "description": "CLICK_COUNTER_LIMIT: safe aggregate capacity exceeded; no event counted." }
+        }
+      }
+    },
     "/api/visits/current": {
       "get": { "operationId": "getCurrentVisit", "summary": "Read this signed browser's current visit and rolling cooldown. Never participates or reveals another browser hash. Removes expired requests on access; used visits may remain visible until expiry.", "responses": { "200": { "$ref": "#/components/responses/VisitState" }, "429": { "$ref": "#/components/responses/RateLimited" } } }
     },

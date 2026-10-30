@@ -286,3 +286,28 @@ integration('Postgres eligibility review is prospective and rejects unreviewed a
   assert.equal((await visitor.participate(key)).data.replayed, true);
   assert.equal((await client().participate()).data.error.code, 'VISIT_REQUIRED');
 });
+
+integration('Postgres click records survive cold starts, deduplicate across writers and leave business data unchanged', async (t) => {
+  const { store, pool, config, client, restart } = await fixture(t);
+  const before = structuredClone(store.state);
+  const another = new PostgresStore(pool, catalog, { schema: store.schema.slice(1, -1) });
+  await another.initialize();
+  const games = [store, another].map((writer) => new Game(writer, catalog, config));
+  const key = randomUUID();
+  const results = await Promise.all(Array.from({ length: 6 }, (_, i) => games[i % 2].instagramClicks.record(key, { source: 'result' })));
+  assert.equal(results.filter((result) => !result.replayed).length, 1);
+  const visitor = client();
+  const recorded = await visitor('/api/instagram/clicks', { method: 'POST', headers: { 'Idempotency-Key': randomUUID() }, body: { source: 'coupon' } });
+  assert.equal(recorded.status, 200);
+  assert.equal(recorded.headers.has('x-olivos-device'), false);
+  restart();
+  const admin = client();
+  await admin.login();
+  const snapshot = (await admin('/api/admin/dashboard')).data;
+  assert.equal(snapshot.instagramClicks.total, 2);
+  assert(!JSON.stringify(snapshot).includes(key));
+  await another.initialize();
+  const { instagramClicks, ...business } = another.state;
+  assert.deepEqual(business, before);
+  assert.equal(instagramClicks.entries.length, 2);
+});
