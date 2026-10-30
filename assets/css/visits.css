@@ -1,0 +1,17 @@
+.visit-help { max-width: 42ch; margin: .7rem auto 1.1rem; color: var(--muted); font-size: .85rem; line-height: 1.7; text-wrap: pretty; }
+.visit-code { display: block; margin: 1rem 0; color: var(--paper); font-family: ui-monospace, monospace; font-size: clamp(1.5rem, 5vw, 2rem); font-weight: 700; letter-spacing: .08em; text-align: center; }
+.visit-qr-box { width: min(100%, 280px); padding: 1rem; margin: 0 auto 1rem; background: #fff; border-radius: 16px; }
+.visit-qr-box img { display: block; width: 100%; height: auto; aspect-ratio: 1; }
+.visit-expiry { display: block; margin: .6rem 0; color: var(--subtle); font-size: .75rem; text-align: center; }
+.visit-state { margin: .9rem 0; color: var(--accent); font-size: .9rem; line-height: 1.6; text-align: center; text-wrap: pretty; }
+.visit-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .65rem; margin-top: 1.2rem; }
+.visit-actions .button { min-height: 44px; }
+.visit-attestation { display: flex; align-items: flex-start; gap: .75rem; margin: 1.25rem 0; font-size: .85rem; line-height: 1.6; }
+.visit-attestation input { flex: none; margin-top: .25rem; }
+.visit-attestation span { min-width: 0; }
+.visit-lookup { max-width: 650px; }
+.visit-lookup label { font-size: .85rem; }
+.visit-lookup .inline-input { margin: .8rem 0; }
+.visit-lookup input { text-transform: uppercase; font-family: ui-monospace, monospace; }
+#visit-approve { width: 100%; }
+@media (max-width: 420px) { .visit-actions { flex-direction: column; } .visit-actions .button { width: 100%; } }

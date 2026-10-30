@@ -1,5 +1,5 @@
-import { request } from './api.js?v=0.2.4';
-import { $, message, busy, statusLabels, formatDate, renderFramedCoupon, downloadCoupon, copyText, couponUrl, toast } from './ui.js?v=0.2.4';
+import { request } from './api.js?v=0.3.0';
+import { $, message, busy, statusLabels, formatDate, renderFramedCoupon, downloadCoupon, copyText, couponUrl, toast } from './ui.js?v=0.3.0';
 
 const token = location.hash.slice(1);
 let coupon;

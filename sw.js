@@ -1,4 +1,4 @@
-const CACHE = 'olivos-premio-pages-0.2.1';
+const CACHE = 'olivos-premio-pages-0.3.0';
 const SHELL = [
   '/premio/offline.html', '/premio/assets/css/tokens.css', '/premio/assets/css/pwa.css',
   '/premio/assets/images/app/icon-192.png', '/premio/img/logoolivos.jpeg',

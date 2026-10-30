@@ -1,29 +1,54 @@
-import { request, uniqueRequestKey } from './api.js?v=0.2.4';
-import { $, $$, element, icon, message, busy, updateRules, openDialog, initializeDialogs, emptyState, statusChip, formatDate, renderFramedCoupon, couponUrl, downloadCoupon, toast } from './ui.js?v=0.2.4';
-import { announceParticipation } from './updates.js?v=0.2.4';
-import { deployment } from './deployment.js?v=0.2.4';
+import { request, uniqueRequestKey } from './api.js?v=0.3.0';
+import { $, $$, element, icon, message, busy, updateRules, openDialog, initializeDialogs, emptyState, statusChip, formatDate, renderFramedCoupon, couponUrl, downloadCoupon, toast } from './ui.js?v=0.3.0';
+import { announceParticipation } from './updates.js?v=0.3.0';
+import { deployment } from './deployment.js?v=0.3.0';
+import { createVisitController } from './visits.js?v=0.3.0';
 
 let campaign;
 let submitting = false;
+let preparingVisit = false;
 let winningCoupon;
 let pendingKey;
 try { pendingKey = sessionStorage.getItem('olivos_pending_participation'); } catch { /* Storage may be disabled. */ }
 
 initializeDialogs();
+const visits = createVisitController({ onChange: updateParticipationButton, onContinue: () => $('#participation-form').requestSubmit() });
 $('#current-year').textContent = new Date().getFullYear();
 
 function updateParticipationButton() {
   $$('[data-participate-button]').forEach((button) => {
     const label = $('[data-participate-label]', button);
     busy(button, submitting);
-    if (submitting) { label.textContent = 'Descubriendo tu momento…'; return; }
+    if (submitting) { label.textContent = preparingVisit ? 'Preparando validación…' : 'Descubriendo tu momento…'; return; }
     if (!deployment.backendAvailable) { button.disabled = true; label.textContent = 'Servidor pendiente'; return; }
     if (!campaign) { label.textContent = 'Volver a conectar'; return; }
-    button.disabled = !campaign.active || campaign.availableStock === 0;
-    label.textContent = !campaign.active ? 'Volveremos a sorprenderte'
-      : campaign.availableStock === 0 ? 'Nuevas sorpresas muy pronto' : button.dataset.idleLabel;
+    const cooldown = campaign.rules.presenceRequired && visits.getCooldownUntil();
+    button.disabled = !pendingKey && (!campaign.active || campaign.availableStock === 0 || Boolean(cooldown));
+    label.textContent = pendingKey ? 'Recuperar mi resultado' : !campaign.active ? 'Volveremos a sorprenderte'
+      : campaign.availableStock === 0 ? 'Nuevas sorpresas muy pronto'
+        : cooldown ? 'Vuelve en 24 horas' : campaign.rules.presenceRequired && !visits.getVisitId() ? 'Validar mi visita' : button.dataset.idleLabel;
   });
+  if (pendingKey) $('#participation-guidance').textContent = 'Hay una respuesta pendiente. Reintenta para recuperar el resultado sin duplicar tu participación.';
+  else if (campaign?.rules.presenceRequired) {
+    const until = visits.getCooldownUntil();
+    $('#participation-guidance').textContent = until ? `Próxima participación: ${formatDate(until, true)}.`
+      : visits.getVisitId() ? 'Visita confirmada. Presiona el botón para participar.' : 'Muestra tu código al personal. Validar la visita no requiere compra.';
+  }
 }
+
+async function prepareVisit() {
+  if (submitting) return;
+  submitting = true;
+  preparingVisit = true;
+  updateParticipationButton();
+  try { await visits.open(); }
+  catch (error) { message($('#participation-message'), error.message, 'error'); }
+  finally { submitting = false; preparingVisit = false; updateParticipationButton(); }
+}
+
+$$('[data-participate-button]').forEach((button) => button.addEventListener('click', (event) => {
+  if (!pendingKey && campaign?.active && campaign.rules.presenceRequired && !visits.getVisitId()) { event.preventDefault(); prepareVisit(); }
+}));
 
 function renderPrizes(prizes) {
   const cards = prizes.map((prize) => {
@@ -54,12 +79,15 @@ async function loadCampaign() {
     $('#promotion-contact').hidden = !campaign.promotionContact;
     $('#promotion-contact').textContent = campaign.promotionContact ? `Consultas sobre la promoción: ${campaign.promotionContact}` : '';
     renderPrizes(campaign.prizes);
+    await visits.load(campaign.rules.presenceRequired === true);
     const status = $('#campaign-status');
     status.dataset.status = campaign.active && campaign.availableStock > 0 ? 'active' : 'paused';
     $('#campaign-status-label').textContent = !deployment.backendAvailable ? 'Servidor pendiente de conexión' : !campaign.active ? 'Experiencia en pausa' : campaign.availableStock === 0 ? 'Preparando sorpresas' : 'La sorpresa está activa';
     if (!deployment.backendAvailable) $('#participation-guidance').textContent = 'Servidor pendiente: esta publicación todavía no registra participaciones.';
     $('#daily-code-field').hidden = !campaign.rules.dailyCodeEnabled;
     $('#daily-code').required = campaign.rules.dailyCodeEnabled;
+    $('#participation-step-intro').textContent = campaign.rules.presenceRequired ? 'Valida tu visita con el personal y luego participa.' : 'Presiona el botón para participar.';
+    $('#closing-guidance').textContent = campaign.rules.presenceRequired ? 'Validación presencial, sin compra. El resultado aparece aquí mismo.' : 'Un clic para participar. El resultado aparece aquí mismo.';
     $('#cooldown-explanation').textContent = 'Puedes participar una vez cada 24 horas desde este navegador. El límite se cuenta desde tu última participación, no desde medianoche. Borrar los datos del navegador puede eludir este control básico: no es una verificación de identidad.';
     return true;
   } catch (error) {
@@ -191,6 +219,7 @@ $('#participation-form').addEventListener('submit', async (event) => {
   if (submitting) return;
   message($('#participation-message'));
   if (!campaign) { await loadCampaign(); return; }
+  if (!pendingKey && campaign.rules.presenceRequired && !visits.getVisitId()) { await prepareVisit(); return; }
   submitting = true;
   updateParticipationButton();
   pendingKey ??= uniqueRequestKey();
@@ -198,7 +227,8 @@ $('#participation-form').addEventListener('submit', async (event) => {
   try {
     const result = await request('/api/participations', {
       method: 'POST', headers: { 'Idempotency-Key': pendingKey },
-      body: campaign.rules.dailyCodeEnabled ? { dailyCode: $('#daily-code').value.trim() } : {},
+      body: { ...(campaign.rules.dailyCodeEnabled ? { dailyCode: $('#daily-code').value.trim() } : {}),
+        ...(campaign.rules.presenceRequired && visits.getVisitId() ? { visitId: visits.getVisitId() } : {}) },
     });
     pendingKey = undefined;
     try { sessionStorage.removeItem('olivos_pending_participation'); } catch { /* No persistent storage available. */ }
@@ -207,6 +237,11 @@ $('#participation-form').addEventListener('submit', async (event) => {
     announceParticipation();
     await Promise.allSettled([loadCampaign(), refreshWallet()]);
   } catch (error) {
+    if (error.status >= 400 && error.status < 500) {
+      pendingKey = undefined;
+      try { sessionStorage.removeItem('olivos_pending_participation'); } catch { /* No persistent storage available. */ }
+    }
+    if (['VISIT_REQUIRED', 'COOLDOWN'].includes(error.code)) await loadCampaign();
     const detail = error.retryAt ? ` Puedes volver a intentar el ${formatDate(error.retryAt, true)}.` : '';
     message($('#participation-message'), `${error.message}${detail}`, 'error');
   } finally { submitting = false; updateParticipationButton(); }

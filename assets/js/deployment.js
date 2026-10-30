@@ -13,7 +13,8 @@ export const deployment = Object.freeze({
       "expiryDays": 5,
       "cooldownEnabled": true,
       "cooldownHours": 24,
-      "dailyCodeEnabled": false
+      "dailyCodeEnabled": false,
+      "presenceRequired": false
     },
     "prizes": [
       {

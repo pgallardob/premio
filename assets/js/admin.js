@@ -1,13 +1,14 @@
-import { request, setCsrfToken } from './api.js?v=0.2.4';
-import { $, $$, element, icon, message, busy, formatDate, statusChip, emptyState, openDialog, initializeDialogs, toast } from './ui.js?v=0.2.4';
-import { onParticipationRecorded } from './updates.js?v=0.2.4';
-import { deployment } from './deployment.js?v=0.2.4';
+import { request, setCsrfToken } from './api.js?v=0.3.0';
+import { $, $$, element, icon, message, busy, formatDate, statusChip, emptyState, openDialog, initializeDialogs, toast } from './ui.js?v=0.3.0';
+import { onParticipationRecorded } from './updates.js?v=0.3.0';
+import { deployment } from './deployment.js?v=0.3.0';
 
 let dashboard;
 let signedIn = false;
 let loading;
 let settingsDirty = false;
 let selectedCoupon;
+let selectedVisit;
 let redemptionNeedsRecheck = false;
 const refreshInterval = deployment.adminRefreshMs ?? 3000;
 let refreshTimer;
@@ -17,7 +18,7 @@ let lastInventory = '';
 let lastSettings = '';
 let lastCoupons = '';
 const inventoryEdits = new Set();
-const panelNames = { overview: 'Vista general', coupons: 'Cupones y canjes', inventory: 'Los premios', settings: 'La experiencia' };
+const panelNames = { overview: 'Vista general', visits: 'Visitas', coupons: 'Cupones y canjes', inventory: 'Los premios', settings: 'La experiencia' };
 initializeDialogs();
 $('#coupon-code-input').pattern = '([Oo][Ll][Vv]|[Tt][Ss][Tt])-[A-Fa-f0-9]{12}';
 
@@ -98,6 +99,13 @@ function showPanel(name) {
 async function handleHash() {
   if (!signedIn) return;
   const hash = location.hash.slice(1);
+  const visit = hash.match(/^visit=([a-f0-9]{32})$/i);
+  if (visit) {
+    showPanel('visits');
+    history.replaceState(null, '', '#visits');
+    await validateVisit(visit[1]);
+    return;
+  }
   const match = hash.match(/^redeem=((?:OLV|TST)-[A-F0-9]{12})$/);
   if (match) {
     showPanel('coupons');
@@ -107,6 +115,47 @@ async function handleHash() {
   } else showPanel(hash);
 }
 window.addEventListener('hashchange', handleHash);
+
+function renderVisit(visit) {
+  selectedVisit = visit;
+  $('#visit-lookup-code').value = visit.code;
+  $('#visit-approval-code').textContent = visit.code;
+  $('#visit-approval-details').textContent = `Solicitud creada el ${formatDate(visit.createdAt, true)}. Válida hasta ${formatDate(visit.expiresAt, true)}.`;
+  $('#visit-present').checked = false;
+  $('#visit-present').disabled = visit.status !== 'pending';
+  $('#visit-approve').disabled = true;
+  $('#visit-approve').hidden = visit.status !== 'pending';
+  message($('#visit-approval-message'), visit.status === 'approved' ? 'Visita ya autorizada. El visitante debe presionar su botón para descubrir el resultado.'
+    : visit.status === 'used' ? 'Esta autorización ya se utilizó para una participación.' : 'Compara el código con la pantalla del teléfono presente. No se requiere compra.');
+}
+
+async function validateVisit(identifier) {
+  message($('#visit-lookup-message'));
+  try {
+    renderVisit(await request(`/api/admin/visits/${encodeURIComponent(identifier.toUpperCase())}`));
+    openDialog($('#visit-approval-dialog'));
+  } catch (error) { handleError(error, $('#visit-lookup-message')); }
+}
+
+$('#visit-lookup-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = $('button[type="submit"]', event.currentTarget);
+  busy(button, true);
+  try { await validateVisit($('#visit-lookup-code').value.trim()); }
+  finally { busy(button, false); }
+});
+$('#visit-present').addEventListener('input', () => { $('#visit-approve').disabled = !$('#visit-present').checked || selectedVisit?.status !== 'pending'; });
+$('#visit-approve').addEventListener('click', async () => {
+  if (selectedVisit?.status !== 'pending' || !$('#visit-present').checked) return;
+  const button = $('#visit-approve');
+  busy(button, true);
+  try {
+    renderVisit(await request(`/api/admin/visits/${selectedVisit.id}/approve`, { method: 'POST', body: { present: true } }));
+    toast('Visita autorizada. Aún no se registró una participación.');
+    await refreshAfterMutation();
+  } catch (error) { handleError(error, $('#visit-approval-message')); }
+  finally { busy(button, false); button.disabled = !$('#visit-present').checked || selectedVisit?.status !== 'pending'; }
+});
 $$('[data-go-redeem]').forEach((button) => button.addEventListener('click', () => {
   location.hash = 'coupons';
   showPanel('coupons');
@@ -248,6 +297,7 @@ function renderSettings() {
   $('#setting-interval').value = settings.interval;
   $('#setting-expiry').value = settings.expiryDays;
   $('#setting-cooldown').checked = settings.cooldownEnabled;
+  $('#setting-presence').checked = settings.presenceRequired === true;
   $('#setting-daily-enabled').checked = settings.dailyCodeEnabled;
   $('#setting-active').checked = settings.campaignActive;
   $('#setting-contact').value = settings.promotionContact ?? '';
@@ -259,7 +309,7 @@ function renderSettings() {
   $('#daily-code-status').textContent = settings.hasDailyCode ? 'Ya hay un código configurado para hoy. No se muestra ni se guarda en texto plano.' : 'No hay un código vigente para hoy. Configura uno antes de activar la verificación.';
 }
 $('#settings-form').addEventListener('input', () => { settingsDirty = true; });
-for (const id of ['setting-contact', 'setting-interval', 'setting-expiry', 'setting-daily-enabled']) {
+for (const id of ['setting-contact', 'setting-interval', 'setting-expiry', 'setting-daily-enabled', 'setting-presence']) {
   document.getElementById(id).addEventListener('input', () => {
     $('#setting-reviewed').checked = false;
     $('#promotion-review-status').textContent = 'La configuración cambió. Revisa las bases y confirma nuevamente antes de activar.';
@@ -279,6 +329,7 @@ $('#settings-form').addEventListener('submit', async (event) => {
     interval: Number($('#setting-interval').value),
     expiryDays: Number($('#setting-expiry').value),
     dailyCodeEnabled: $('#setting-daily-enabled').checked,
+    presenceRequired: $('#setting-presence').checked,
     campaignActive: $('#setting-active').checked,
     promotionContact: $('#setting-contact').value.trim(),
     promotionReviewed: $('#setting-reviewed').checked,
