@@ -21,7 +21,7 @@ El catálogo usa identificadores nuevos y cinco ilustraciones referenciales; no 
 
 El contacto solicitado está guardado. La revisión de bases y privacidad se confirma expresamente en **Administración → La experiencia** y permanece registrada entre reinicios. El mensaje de guardado ocupa todo el ancho bajo el botón y el texto de presentación de premios se adapta sin saltos de línea forzados.
 
-El propietario solicitó además un único [QR ganador de prueba retenido](CUPON_PRUEBA.md), separado de los datos comerciales, sin vencimiento ni canje. Debe conservarse hasta que pida eliminarlo; no se debe reiniciar el contador, descontar stock o generar participaciones para obtenerlo.
+El único [QR ganador de prueba retenido](CUPON_PRUEBA.md) ya se creó, separado de los datos comerciales, sin vencimiento ni canje. Su marcador y enlace privados se conservan fuera de Git; la imagen generada está excluida del repositorio. Debe conservarse hasta que el propietario pida eliminarlo: no volver a generarlo como otro premio, reiniciar el contador, descontar stock ni crear participaciones para obtenerlo.
 
 ## Implementado y comprobado
 
