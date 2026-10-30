@@ -12,6 +12,11 @@ if (process.env.NEON_CONFIG_DIR) {
     if (index > 0 && /PASSWORD|SECRET|TOKEN/.test(line.slice(0, index))) knownSecrets.push(line.slice(index + 1));
   }
   knownSecrets.push((await readFile(join(process.env.NEON_CONFIG_DIR, 'premio-admin-password.txt'), 'utf8')).trim());
+  try {
+    const test = JSON.parse(await readFile(join(process.env.NEON_CONFIG_DIR, 'test-winner.json'), 'utf8'));
+    if (test.token) knownSecrets.push(test.token);
+    if (test.url) knownSecrets.push(test.url);
+  } catch (error) { if (error.code !== 'ENOENT') throw error; }
 }
 try {
   const local = await readFile('ellocal.txt', 'utf8');

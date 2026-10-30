@@ -21,6 +21,7 @@ export function initialState(catalog, defaults = {}) {
     cycleProgress: 0,
     participations: [],
     coupons: [],
+    testCoupons: [],
     lastParticipation: {},
     audit: [],
   };
@@ -49,7 +50,7 @@ export function validateState(state) {
     || !state.lastParticipation || Array.isArray(state.lastParticipation) || typeof state.lastParticipation !== 'object'
     || Object.entries(state.lastParticipation).some(([device, at]) => !fingerprint(device) || !Number.isFinite(at) || at < 0)
     || new Set(state.coupons.map((coupon) => coupon.code)).size !== state.coupons.length
-    || state.coupons.some((coupon) => !code(coupon.code) || !fingerprint(coupon.token) || !fingerprint(coupon.deviceHash)
+    || state.coupons.some((coupon) => (coupon.testOnly !== undefined && coupon.testOnly !== false) || !code(coupon.code) || !fingerprint(coupon.token) || !fingerprint(coupon.deviceHash)
       || !coupon.prize || !Object.hasOwn(state.inventory, coupon.prize.id)
       || !['active', 'redeemed', 'expired'].includes(coupon.status) || !validDate(coupon.issuedAt) || !validDate(coupon.expiresAt)
       || Date.parse(coupon.expiresAt) <= Date.parse(coupon.issuedAt)
@@ -59,6 +60,15 @@ export function validateState(state) {
       || !fingerprint(entry.deviceHash) || typeof entry.requestKey !== 'string' || !/^[\w-]{16,80}$/.test(entry.requestKey)
       || typeof entry.won !== 'boolean' || (entry.couponCode !== null && !code(entry.couponCode)))) {
     throw new Error('El estado contiene reglas o registros no válidos. No se reinició ni sobrescribió el archivo.');
+  }
+  const tests = state.testCoupons === undefined ? [] : state.testCoupons;
+  if (!Array.isArray(tests) || tests.length > 1 || tests.some((coupon) => coupon.testOnly !== true
+    || !/^TST-[A-F0-9]{12}$/.test(coupon.code ?? '') || !fingerprint(coupon.token) || !fingerprint(coupon.deviceHash)
+    || coupon.status !== 'active' || coupon.expiresAt !== null || coupon.redeemedAt !== null || !validDate(coupon.issuedAt)
+    || !coupon.prize || !Object.hasOwn(state.inventory, coupon.prize.id)
+    || (coupon.savedBy !== undefined && (!Array.isArray(coupon.savedBy) || coupon.savedBy.length > 100 || coupon.savedBy.some((device) => !fingerprint(device)))))
+    || new Set([...state.coupons, ...tests].map((coupon) => coupon.token)).size !== state.coupons.length + tests.length) {
+    throw new Error('El cupón de prueba no es válido. No se modificaron los datos.');
   }
 }
 

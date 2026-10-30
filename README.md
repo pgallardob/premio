@@ -66,6 +66,7 @@ Esta entrega es una **PWA**, no un APK, IPA ni una publicación en App Store/Goo
 - [Arquitectura](docs/ARQUITECTURA.md), [seguridad](docs/SEGURIDAD.md) y [diseño](docs/DISENO.md)
 - [Contrato HTTP](docs/API.md) · [OpenAPI](docs/api.openapi.json)
 - [Pruebas](docs/PRUEBAS.md), [requisitos](docs/REQUISITOS.md) y [dependencias](docs/DEPENDENCIAS.md)
+- [QR ganador privado para comprobación en teléfono](docs/CUPON_PRUEBA.md)
 
 ## Límites importantes
 

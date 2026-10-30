@@ -19,6 +19,7 @@ let lastCoupons = '';
 const inventoryEdits = new Set();
 const panelNames = { overview: 'Vista general', coupons: 'Cupones y canjes', inventory: 'Los premios', settings: 'La experiencia' };
 initializeDialogs();
+$('#coupon-code-input').pattern = '([Oo][Ll][Vv]|[Tt][Ss][Tt])-[A-Fa-f0-9]{12}';
 
 $('#panel-coupons a[download]').addEventListener('click', async (event) => {
   event.preventDefault();
@@ -97,7 +98,7 @@ function showPanel(name) {
 async function handleHash() {
   if (!signedIn) return;
   const hash = location.hash.slice(1);
-  const match = hash.match(/^redeem=(OLV-[A-F0-9]{12})$/);
+  const match = hash.match(/^redeem=((?:OLV|TST)-[A-F0-9]{12})$/);
   if (match) {
     showPanel('coupons');
     $('#coupon-code-input').value = match[1];
@@ -365,13 +366,13 @@ function renderRedemption(coupon) {
   image.src = coupon.prize.image;
   image.alt = '';
   const copy = element('div');
-  copy.append(element('h3', '', coupon.prize.name), element('strong', '', coupon.code), statusChip(coupon.status),
-    element('p', '', `Vence ${formatDate(coupon.expiresAt, true)}${coupon.redeemedAt ? ` · Canjeado ${formatDate(coupon.redeemedAt, true)}` : ''}`));
+  copy.append(element('h3', '', coupon.prize.name), element('strong', '', coupon.code), statusChip(coupon.status, coupon.testOnly),
+    element('p', '', coupon.testOnly ? 'Prueba sin vencimiento. No permite entrega ni canje.' : `Vence ${formatDate(coupon.expiresAt, true)}${coupon.redeemedAt ? ` · Canjeado ${formatDate(coupon.redeemedAt, true)}` : ''}`));
   details.append(image, copy);
   $('#redeem-details').replaceChildren(details);
-  $('#confirm-redeem').hidden = coupon.status !== 'active';
+  $('#confirm-redeem').hidden = coupon.status !== 'active' || coupon.testOnly === true;
   $('#confirm-redeem').replaceChildren(document.createTextNode('Confirmar canje y entrega '), icon('check'));
-  message($('#redeem-message'), coupon.status === 'active' ? 'Cupón vigente. Confirma el canje antes de entregar el premio.' : 'Este cupón no permite una nueva entrega.', coupon.status === 'active' ? '' : 'error');
+  message($('#redeem-message'), coupon.testOnly ? 'Cupón ganador de prueba: permanece activo hasta su eliminación y no permite canjes reales.' : coupon.status === 'active' ? 'Cupón vigente. Confirma el canje antes de entregar el premio.' : 'Este cupón no permite una nueva entrega.', coupon.status === 'active' ? '' : 'error');
 }
 
 async function validateCoupon(code) {
@@ -391,7 +392,7 @@ $('#validate-form').addEventListener('submit', async (event) => {
 });
 
 $('#confirm-redeem').addEventListener('click', async () => {
-  if (!selectedCoupon) return;
+  if (!selectedCoupon || selectedCoupon.testOnly) return;
   const button = $('#confirm-redeem');
   busy(button, true);
   try {

@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { readFile, writeFile, access, mkdir } from 'node:fs/promises';
+import { readFile, writeFile, access, mkdir, unlink } from 'node:fs/promises';
 import { writeFileSync } from 'node:fs';
 import { resolve, join, relative, isAbsolute, sep } from 'node:path';
 import { randomBytes } from 'node:crypto';
@@ -9,6 +9,7 @@ import { PostgresStore } from '../server/neon/store.js';
 import { validateState } from '../server/store.js';
 import { applyInventoryPlan } from '../server/inventory.js';
 import { Game } from '../server/game.js';
+import QRCode from 'qrcode';
 
 const root = resolve(import.meta.dirname, '..');
 const target = JSON.parse(await readFile(join(root, 'deploy/neon-target.json'), 'utf8'));
@@ -53,11 +54,51 @@ async function prepareCredentials() {
 }
 
 const command = process.argv[2] ?? 'inspect';
-if (['inspect', 'migrate', 'verify', 'inventory-plan', 'inventory-apply', 'set-contact'].includes(command)) {
+if (['inspect', 'migrate', 'verify', 'inventory-plan', 'inventory-apply', 'set-contact', 'test-winner-create', 'test-winner-delete'].includes(command)) {
   if (command === 'inventory-apply' && process.argv[3] !== '--confirm=APPLY_INVENTORY') throw new Error('Explicit --confirm=APPLY_INVENTORY is required.');
   if (command === 'set-contact' && (!process.argv[3] || process.argv[4] !== '--confirm=UPDATE_CONTACT')) throw new Error('Provide a public contact and --confirm=UPDATE_CONTACT.');
+  if (command === 'test-winner-create' && process.argv[3] !== '--confirm=CREATE_TEST_WINNER') throw new Error('Explicit --confirm=CREATE_TEST_WINNER is required.');
+  if (command === 'test-winner-delete' && process.argv[3] !== '--confirm=DELETE_TEST_WINNER') throw new Error('Explicit --confirm=DELETE_TEST_WINNER is required.');
   const pool = new pg.Pool({ connectionString: await databaseUrl(), max: 2, connectionTimeoutMillis: 15_000 });
   try {
+    if (command.startsWith('test-winner-')) {
+      const markerPath = join(configDir, 'test-winner.json');
+      const qrPath = join(root, 'artifacts/test-winner-qr.png');
+      let previous;
+      try { previous = JSON.parse(await readFile(markerPath, 'utf8')); }
+      catch (error) { if (error.code !== 'ENOENT') throw new Error('The existing private test marker could not be verified; no file was overwritten.'); }
+      if (previous && (previous.projectId !== target.projectId || previous.branchId !== target.branchId || previous.testOnly !== true || !/^TST-[A-F0-9]{12}$/.test(previous.code))) throw new Error('The private test marker belongs to an unknown resource.');
+      const source = JSON.parse(await readFile(join(root, 'config/prizes.json'), 'utf8'));
+      const base = new URL(target.publicUrl).pathname.replace(/\/$/, '');
+      const catalog = source.map((prize) => ({ ...prize, image: `${base}${prize.image}` }));
+      const store = new PostgresStore(pool, catalog);
+      await store.initialize();
+      const game = new Game(store, catalog, { production: true, publicUrl: target.publicUrl });
+      if (command === 'test-winner-create') {
+        if (!previous) {
+          try { await access(qrPath); throw new Error('A QR image already exists without a verified marker; it was preserved.'); }
+          catch (error) { if (error.code !== 'ENOENT') throw error; }
+        }
+        const coupon = await game.createTestWinner();
+        if (previous && (previous.code !== coupon.code || previous.token !== coupon.token)) throw new Error('A different test coupon is already recorded locally; it was preserved.');
+        const url = `${target.publicUrl}/cupon.html?test=${coupon.code}#${coupon.token}`;
+        const marker = { projectId: target.projectId, branchId: target.branchId, testOnly: true, code: coupon.code,
+          token: coupon.token, url, prize: coupon.prize.name, issuedAt: coupon.issuedAt, expiresAt: null, qr: 'artifacts/test-winner-qr.png' };
+        await writeFile(markerPath, JSON.stringify(marker, null, 2), { mode: 0o600, ...(previous ? {} : { flag: 'wx' }) });
+        await mkdir(join(root, 'artifacts'), { recursive: true });
+        await writeFile(qrPath, await QRCode.toBuffer(url, { width: 768, margin: 4, errorCorrectionLevel: 'M' }));
+        console.log(JSON.stringify({ code: coupon.code, prize: coupon.prize.name, testOnly: true, status: coupon.status, expiresAt: null,
+          qr: 'artifacts/test-winner-qr.png', retainedUntilRequestedDeletion: true }, null, 2));
+      } else {
+        if (!previous) throw new Error('No verified private test marker exists; no record was deleted.');
+        console.log(JSON.stringify(await game.deleteTestWinner(previous.code), null, 2));
+        await unlink(markerPath);
+        await unlink(qrPath).catch((error) => { if (error.code !== 'ENOENT') throw error; });
+        for (const name of ['phone-390.png', 'downloaded-test.png', 'admin-readonly.png']) {
+          await unlink(join(root, 'artifacts/test-winner-check', name)).catch((error) => { if (error.code !== 'ENOENT') throw error; });
+        }
+      }
+    }
     if (command === 'set-contact') {
       const catalog = JSON.parse(await readFile(join(root, 'config/prizes.json'), 'utf8'));
       const store = new PostgresStore(pool, catalog);
@@ -88,7 +129,7 @@ if (['inspect', 'migrate', 'verify', 'inventory-plan', 'inventory-apply', 'set-c
       validateState(state);
       console.log(JSON.stringify({ active: state.settings.campaignActive, cooldownEnabled: state.settings.cooldownEnabled,
         cooldownHours: state.settings.cooldownHours, stock: Object.values(state.inventory).reduce((sum, value) => sum + value, 0),
-        participations: state.totalParticipations, coupons: state.coupons.length, auditEntries: state.audit.length,
+        participations: state.totalParticipations, coupons: state.coupons.length, testCoupons: (state.testCoupons ?? []).length, auditEntries: state.audit.length,
         verificationSchemasRemaining: rows.some((row) => row.table_schema.startsWith('premio_verify_')) }, null, 2));
     }
   } finally { await pool.end(); }
@@ -120,4 +161,4 @@ if (['inspect', 'migrate', 'verify', 'inventory-plan', 'inventory-apply', 'set-c
   await mkdir(join(root, 'artifacts'), { recursive: true });
   await writeFile(join(root, 'artifacts/neon-deployment.json'), JSON.stringify(safe, null, 2));
   console.log(JSON.stringify(safe, null, 2));
-} else throw new Error('Use inspect, migrate, test, deploy, verify, inventory-plan, inventory-apply, set-contact or diagnose.');
+} else throw new Error('Use inspect, migrate, test, deploy, verify, inventory-plan, inventory-apply, set-contact, test-winner-create, test-winner-delete or diagnose.');

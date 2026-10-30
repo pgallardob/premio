@@ -1,0 +1,95 @@
+import assert from 'node:assert/strict';
+import { readFile, mkdir } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
+import { chromium, expect } from '@playwright/test';
+
+const root = resolve(import.meta.dirname, '..');
+if (!process.env.NEON_CONFIG_DIR) throw new Error('The private Neon configuration directory is required.');
+const marker = JSON.parse(await readFile(join(process.env.NEON_CONFIG_DIR, 'test-winner.json'), 'utf8'));
+const target = JSON.parse(await readFile(join(root, 'deploy/neon-target.json'), 'utf8'));
+const deployed = JSON.parse(await readFile(join(root, 'artifacts/neon-deployment.json'), 'utf8'));
+assert.equal(marker.projectId, target.projectId);
+assert.equal(marker.branchId, target.branchId);
+assert.equal(marker.testOnly, true);
+assert.match(marker.code, /^TST-[A-F0-9]{12}$/);
+assert(typeof marker.token === 'string' && /^[a-f0-9]{64}$/.test(marker.token), 'The private test credential is invalid.');
+const site = new URL(`${target.publicUrl}/`);
+const link = new URL(marker.url);
+assert.equal(link.origin, site.origin);
+assert.equal(link.pathname, `${site.pathname}cupon.html`);
+assert(link.hash === `#${marker.token}`, 'The private test link does not match its marker.');
+assert.equal(deployed.project, target.projectId);
+assert.equal(deployed.branch, target.branchId);
+const api = new URL(deployed.url);
+assert.equal(api.protocol, 'https:');
+assert(api.hostname.startsWith(`${target.branchId}-api.compute.`) && api.hostname.endsWith('.neon.tech'));
+const artifacts = join(root, 'artifacts/test-winner-check');
+await mkdir(artifacts, { recursive: true });
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+const secrets = [marker.url, marker.token];
+try {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce', acceptDownloads: true });
+  const page = await context.newPage();
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto(marker.url);
+  await expect(page.locator('#coupon-status')).toContainText('Ganador de prueba');
+  await expect(page.locator('#coupon-code')).toHaveText(marker.code);
+  await expect(page.locator('#coupon-description')).toContainText('sin vencimiento');
+  await expect(page.locator('#coupon-expiry')).toContainText('NO CANJEABLE');
+  for (const width of [320, 390, 768]) {
+    await page.setViewportSize({ width, height: 844 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+    expect(await page.locator('#coupon-qr').evaluate((image) => image.decode().then(() => image.naturalWidth))).toBe(512);
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: join(artifacts, 'phone-390.png'), fullPage: true });
+  const download = page.waitForEvent('download');
+  await page.locator('#download-coupon').click();
+  const png = await download;
+  await png.saveAs(join(artifacts, 'downloaded-test.png'));
+  const bytes = await readFile(join(artifacts, 'downloaded-test.png'));
+  assert.equal(bytes.readUInt32BE(16), 768);
+  assert.equal(bytes.readUInt32BE(20), 1390);
+  await page.reload();
+  await expect(page.locator('#coupon-status')).toContainText('Ganador de prueba');
+  await page.locator('#coupon-wallet-button').click();
+  await expect(page.locator('.wallet-item').filter({ hasText: marker.code })).toContainText('Prueba · sin canje');
+  console.log('PASS Live held winner: responsive phone page, real QR, marked PNG, reload and wallet without participation.');
+
+  const password = (await readFile(join(process.env.NEON_CONFIG_DIR, 'premio-admin-password.txt'), 'utf8')).trim();
+  secrets.push(password);
+  await page.goto(`${target.publicUrl}/admin.html?test=${marker.code}#redeem=${marker.code}`);
+  assert.equal(new URL(page.url()).origin, site.origin);
+  await page.locator('#admin-password').fill(password);
+  await page.locator('#login-button').click();
+  await expect(page.locator('#redeem-dialog')).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('#confirm-redeem')).toBeHidden();
+  await expect(page.locator('#redeem-message')).toContainText('no permite canjes reales');
+  await page.screenshot({ path: join(artifacts, 'admin-readonly.png'), fullPage: true });
+  const session = await page.evaluate(() => JSON.parse(sessionStorage.getItem('olivos_session_v1')).token);
+  secrets.push(session);
+  const headers = { Origin: site.origin, Authorization: `Bearer ${session}` };
+  const current = await context.request.get(new URL('api/admin/session', api).href, { headers });
+  const csrf = (await current.json()).csrfToken;
+  secrets.push(csrf);
+  const denied = await context.request.post(new URL(`api/admin/coupons/${marker.code}/redeem`, api).href,
+    { headers: { ...headers, 'X-CSRF-Token': csrf }, data: {} });
+  expect(denied.status()).toBe(409);
+  expect((await denied.json()).error.code).toBe('TEST_COUPON');
+  const couponResponse = await context.request.get(new URL(`api/coupons/${marker.token}`, api).href, { headers: { Origin: site.origin } });
+  const held = await couponResponse.json();
+  assert.equal(held.status, 'active');
+  assert.equal(held.expiresAt, null);
+  assert.equal(held.testOnly, true);
+  await page.keyboard.press('Escape');
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await page.locator('#logout-button').click();
+  expect(errors).toEqual([]);
+  console.log('PASS Live admin QR validation is read-only; forced redemption rejected, test winner still active with no expiry.');
+} catch (error) {
+  let text = String(error.stack ?? error);
+  for (const secret of secrets.filter(Boolean)) text = text.replaceAll(secret, '[private-value]');
+  console.error(text);
+  process.exitCode = 1;
+} finally { await browser.close(); }

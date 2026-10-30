@@ -528,6 +528,34 @@ try {
     await expect(page.locator('.section-heading__aside br')).toHaveCount(0);
   });
 
+  await check('A private test winner stays clearly noncommercial on phone, download, wallet and admin validation', async () => {
+    const { testCoupons, ...before } = structuredClone(app.store.state);
+    const held = await app.game.createTestWinner();
+    await page.goto(`${config.publicUrl}/cupon.html?test=${held.code}#${held.token}`);
+    await expect(page.locator('#coupon-status')).toContainText('Ganador de prueba');
+    await expect(page.locator('#coupon-expiry')).toContainText('NO CANJEABLE');
+    await expect(page.locator('#coupon-description')).toContainText('sin vencimiento');
+    for (const width of [320, 390, 768, 1366]) {
+      await page.setViewportSize({ width, height: 844 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+      if (width === 390) await page.screenshot({ path: join(artifacts, 'held-winner-phone.png'), fullPage: true });
+    }
+    const download = page.waitForEvent('download');
+    await page.locator('#download-coupon').click();
+    expect((await download).suggestedFilename()).toBe(`los-olivos-${held.code}.png`);
+    await page.locator('#coupon-wallet-button').click();
+    await expect(page.locator('#wallet-dialog')).toBeVisible();
+    await expect(page.locator('.wallet-item').filter({ hasText: held.code })).toContainText('Prueba · sin canje');
+    await page.goto(`${config.publicUrl}/admin.html?test=${held.code}#redeem=${held.code}`);
+    await expect(page.locator('#redeem-dialog')).toBeVisible();
+    await expect(page.locator('#confirm-redeem')).toBeHidden();
+    await expect(page.locator('#redeem-message')).toContainText('no permite canjes reales');
+    const { testCoupons: current, ...after } = app.store.state;
+    expect(current).toHaveLength(1);
+    expect(current[0].status).toBe('active');
+    expect(after).toEqual(before);
+  });
+
   expect(errors.filter((text) => !/Failed to load resource:.*429/.test(text))).toEqual([]);
   await writeFile(join(artifacts, 'results.json'), JSON.stringify({ browser: `Google Chrome ${browser.version()}`, checks: results, uncaughtErrors: errors.filter((text) => !text.includes('Failed to load resource')), generatedAt: new Date().toISOString() }, null, 2));
   console.log(`\n${results.length} browser checks passed. Screenshots: ${artifacts}`);

@@ -46,6 +46,8 @@ La suite adicional comprueba configuración pública segura, confianza explícit
 
 ## Comprobaciones PWA
 
+Para el único cupón privado solicitado que debe permanecer ganador hasta su eliminación, consulte [Cupón de prueba retenido](CUPON_PRUEBA.md). Se guarda separado de los premios comerciales, con código `TST-…`, sin consumir stock ni participaciones y sin permitir canje. No sustituye las pruebas aisladas ni activa repeticiones públicas.
+
 - Manifiesto e iconos válidos y política de workers sin código inline.
 - Registro y control real del service worker en Chrome.
 - Caché limitada a recursos públicos; ni API ni documentos privados quedan guardados.

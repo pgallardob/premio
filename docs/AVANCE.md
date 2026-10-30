@@ -1,6 +1,6 @@
-# Estado publicado e inventario real · 0.2.3
+# Estado publicado e inventario real · 0.2.4
 
-Actualizado el 30 de octubre de 2026. La web utiliza GitHub Pages y Neon Functions con PostgreSQL en el plan Free. No depende de mantener encendida la computadora. **El inventario real ya se cargó: 58 unidades de cinco productos. La campaña continúa pausada; cargar stock no equivale a activarla.**
+Actualizado el 30 de octubre de 2026. La web utiliza GitHub Pages y Neon Functions con PostgreSQL en el plan Free. No depende de mantener encendida la computadora. **La última consulta confirma la campaña activa, con 58 unidades, dos participaciones y ningún cupón comercial emitido. No cambiar estos valores para forzar una prueba ganadora.**
 
 ## Accesos
 
@@ -15,11 +15,13 @@ La contraseña administrativa de publicación es distinta de la local. Se conser
 
 El propietario reemplazó el plan anterior por **20 destapadores Monster, 20 galletas mini Costa, 10 Jokey, 5 poleras y 3 agendas: 58 unidades en total**. La carga se aplicó en una transacción de PostgreSQL, con controles para no sobrescribir cambios posteriores ni duplicar la reposición. Consulte [Operación del local](OPERACION.md#inventario-vigente).
 
-Último estado verificado: campaña pausada, stock 58, cero participaciones y cupones, cinco movimientos de inventario y una actualización de contacto en auditoría, con protección obligatoria de 24 horas. El botón «Volveremos a sorprenderte» permanece deshabilitado porque la campaña no está activa, no por falta de stock o conexión. El plan anterior de bebidas, snacks y café quedó sin efecto y no debe aplicarse.
+La campaña fue habilitada después de incorporar la confirmación del panel. Se conservan la protección de 24 horas, el contador y el stock reales; la auditoría consultada contiene siete movimientos. El plan anterior de bebidas, snacks y café quedó sin efecto y no debe aplicarse.
 
 El catálogo usa identificadores nuevos y cinco ilustraciones referenciales; no son fotografías de los productos. Los identificadores anteriores y sus recursos se conservan para no romper posibles referencias históricas. Los valores iniciales de una instalación nueva siguen en cero.
 
-El contacto solicitado está guardado. La revisión de bases y privacidad ahora se confirma expresamente en **Administración → La experiencia** y permanece registrada entre reinicios; sigue pendiente del propietario. No se activó la campaña ni se marcó esa confirmación en su nombre. El mensaje de guardado ocupa todo el ancho bajo el botón y el texto de presentación de premios se adapta sin saltos de línea forzados.
+El contacto solicitado está guardado. La revisión de bases y privacidad se confirma expresamente en **Administración → La experiencia** y permanece registrada entre reinicios. El mensaje de guardado ocupa todo el ancho bajo el botón y el texto de presentación de premios se adapta sin saltos de línea forzados.
+
+El propietario solicitó además un único [QR ganador de prueba retenido](CUPON_PRUEBA.md), separado de los datos comerciales, sin vencimiento ni canje. Debe conservarse hasta que pida eliminarlo; no se debe reiniciar el contador, descontar stock o generar participaciones para obtenerlo.
 
 ## Implementado y comprobado
 
@@ -31,11 +33,11 @@ El contacto solicitado está guardado. La revisión de bases y privacidad ahora 
 - Registros anteriores eliminados sin restaurarlos, sin modo de prueba público ni premios ficticios en producción.
 - Despliegue local con archivo y alternativa Docker/Caddy conservados, separados de la publicación en Neon.
 
-Evidencia: 23 pruebas existentes, ocho pruebas de inventario, seis pruebas de contacto y confirmación, y diez comprobaciones contra PostgreSQL real. Los 20 recorridos de Chrome verifican también el mensaje ancho bajo el botón, la confirmación explícita y los enlaces a bases y privacidad; se mantienen las siete comprobaciones PWA y la compilación estática. Los esquemas de verificación se eliminan al terminar; no se generan participaciones ni cupones reales para probar la publicación.
+Evidencia: 23 pruebas existentes, ocho de inventario, seis de contacto y confirmación, cinco del cupón retenido y once comprobaciones contra PostgreSQL real. Los 21 recorridos de Chrome incluyen la vista ganadora de prueba en teléfono, PNG, colección y validación sin canje; se mantienen las siete comprobaciones PWA y la compilación estática. Los datos automáticos se crean y eliminan en instalaciones aisladas; el cupón privado solicitado se conserva separadamente hasta que el propietario pida borrarlo.
 
 ## Retomar en la próxima sesión
 
-1. Revisar bases y privacidad, marcar la confirmación en el panel y autorizar la activación. El contacto ya está configurado.
+1. Conservar el cupón de prueba solicitado y eliminarlo únicamente cuando lo pida el propietario; verificar el estado actual antes de operar.
 2. Revisar el inventario y las reservas antes de cualquier reposición; no repetir la carga inicial ya aplicada ni restaurar historial.
 3. Comprobar la participación desde computador y teléfonos físicos, el QR y un canje de un solo uso después de activar.
 4. Configurar respaldo PostgreSQL externo, calendario y verificación de restauración.

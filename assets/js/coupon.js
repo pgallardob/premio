@@ -25,8 +25,10 @@ async function loadCoupon() {
     $('#coupon-placeholder').hidden = true;
     $('#coupon-actions').hidden = false;
     $('#coupon-status').dataset.status = coupon.status;
-    $('#coupon-status').textContent = statusLabels[coupon.status];
-    $('#coupon-description').textContent = coupon.status === 'active'
+    $('#coupon-status').textContent = coupon.testOnly ? 'Ganador de prueba · sin validez para canje' : statusLabels[coupon.status];
+    $('#coupon-description').textContent = coupon.testOnly
+      ? 'Este cupón ganador de prueba permanece activo y sin vencimiento hasta que solicites eliminarlo. No reserva inventario ni permite canjes reales.'
+      : coupon.status === 'active'
       ? `Tu premio está reservado. Muéstralo en el local antes del ${formatDate(coupon.expiresAt, true)}. La administración confirmará el canje.`
       : coupon.status === 'redeemed'
         ? `Este buen momento ya fue disfrutado. Cupón canjeado el ${formatDate(coupon.redeemedAt, true)}. No puede utilizarse otra vez.`

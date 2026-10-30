@@ -200,3 +200,22 @@ integration('Neon owner review and public contact persist and permit activation 
   await admin('/api/admin/settings', { method: 'PATCH', body: { campaignActive: false, promotionReviewed: false } });
   assert.equal((await admin('/api/admin/settings', { method: 'PATCH', body: { campaignActive: true } })).status, 400);
 });
+
+integration('one held test winner survives instances, never redeems and leaves all business data intact', async (t) => {
+  const { store, pool, config } = await fixture(t);
+  const another = new PostgresStore(pool, catalog, { schema: store.schema.slice(1, -1) });
+  await another.initialize();
+  const games = [store, another].map((writer) => new Game(writer, catalog, config));
+  const { testCoupons, ...before } = structuredClone(store.state);
+  const winners = await Promise.all(games.map((game) => game.createTestWinner()));
+  assert.equal(winners[0].token, winners[1].token);
+  assert.equal(winners[0].expiresAt, null);
+  await assert.rejects(games[1].redeem(winners[0].code), (error) => error.code === 'TEST_COUPON');
+  await another.initialize();
+  assert.equal(another.state.testCoupons[0].status, 'active');
+  await games[1].deleteTestWinner(winners[0].code);
+  await store.initialize();
+  const { testCoupons: remaining, ...after } = store.state;
+  assert.equal(remaining.length, 0);
+  assert.deepEqual(after, before);
+});

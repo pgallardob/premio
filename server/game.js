@@ -54,6 +54,7 @@ export class Game {
       expiresAt: coupon.expiresAt,
       status: coupon.status,
       redeemedAt: coupon.redeemedAt,
+      ...(coupon.testOnly === true ? { testOnly: true } : {}),
     };
   }
 
@@ -145,7 +146,7 @@ export class Game {
     return this.store.transaction((state) => {
       this.expire(state);
       const deviceHash = this.hash(deviceId);
-      return { coupons: state.coupons.filter((coupon) => coupon.deviceHash === deviceHash || coupon.savedBy?.includes(deviceHash))
+      return { coupons: [...state.coupons, ...(state.testCoupons ?? [])].filter((coupon) => coupon.deviceHash === deviceHash || coupon.savedBy?.includes(deviceHash))
         .reverse().map((coupon) => this.couponView(coupon, state)) };
     });
   }
@@ -155,8 +156,9 @@ export class Game {
     requireInput(typeof input.token === 'string' && /^[a-f0-9]{64}$/.test(input.token), 'Se necesita el enlace privado completo del cupón.');
     const deviceHash = this.hash(deviceId);
     return this.store.transaction((state) => {
-      this.expire(state);
-      const coupon = state.coupons.find((item) => item.token === input.token);
+      const testCoupon = (state.testCoupons ?? []).find((item) => item.token === input.token);
+      if (!testCoupon) this.expire(state);
+      const coupon = testCoupon ?? state.coupons.find((item) => item.token === input.token);
       if (!coupon) throw new AppError(404, 'NOT_FOUND', 'No encontramos ese cupón. Revisa su enlace privado.');
       if (coupon.deviceHash !== deviceHash) {
         coupon.savedBy ??= [];
@@ -171,6 +173,8 @@ export class Game {
 
   getCoupon(identifier, byCode = false) {
     return this.store.transaction((state) => {
+      const testCoupon = (state.testCoupons ?? []).find((item) => (byCode ? item.code : item.token) === identifier);
+      if (testCoupon) return this.couponView(testCoupon, state);
       this.expire(state);
       const coupon = state.coupons.find((item) => (byCode ? item.code : item.token) === identifier);
       if (!coupon) throw new AppError(404, 'NOT_FOUND', 'No encontramos ese cupón. Revisa el enlace o el código.');
@@ -180,6 +184,7 @@ export class Game {
 
   redeem(code) {
     return this.store.transaction((state) => {
+      if ((state.testCoupons ?? []).some((coupon) => coupon.code === code)) throw new AppError(409, 'TEST_COUPON', 'Este cupón es de prueba, no permite canje y permanece activo hasta que se elimine.');
       this.expire(state);
       const coupon = state.coupons.find((item) => item.code === code);
       if (!coupon) throw new AppError(404, 'NOT_FOUND', 'No encontramos un cupón con ese código.');
@@ -243,6 +248,33 @@ export class Game {
       state.inventory[prizeId] = input.stock;
       state.audit.push({ action: 'inventory', prizeId, stock: input.stock, at: new Date(this.clock()).toISOString() });
       return this.prizes(state).find((prize) => prize.id === prizeId);
+    });
+  }
+
+  createTestWinner() {
+    const selected = this.catalog.find((prize) => prize.featured) ?? this.catalog[0];
+    if (!selected) throw new AppError(400, 'INVALID_INPUT', 'No hay un premio configurado para la prueba.');
+    return this.store.transaction((state) => {
+      state.testCoupons ??= [];
+      if (state.testCoupons.length) return this.couponView(state.testCoupons[0], state);
+      const { initialStock, ...prize } = selected;
+      let token;
+      do { token = randomBytes(32).toString('hex'); } while (state.coupons.some((coupon) => coupon.token === token));
+      const coupon = { code: `TST-${randomBytes(6).toString('hex').toUpperCase()}`, token,
+        deviceHash: randomBytes(32).toString('hex'), prize, issuedAt: new Date(this.clock()).toISOString(),
+        expiresAt: null, redeemedAt: null, status: 'active', testOnly: true, savedBy: [] };
+      state.testCoupons.push(coupon);
+      return this.couponView(coupon, state);
+    });
+  }
+
+  deleteTestWinner(code) {
+    requireInput(typeof code === 'string' && /^TST-[A-F0-9]{12}$/.test(code), 'Solo se puede eliminar el cupón de prueba identificado.');
+    return this.store.transaction((state) => {
+      const index = (state.testCoupons ?? []).findIndex((coupon) => coupon.code === code);
+      if (index < 0) throw new AppError(404, 'NOT_FOUND', 'El cupón de prueba no existe.');
+      state.testCoupons.splice(index, 1);
+      return { deleted: true, code };
     });
   }
 

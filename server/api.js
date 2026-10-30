@@ -54,7 +54,7 @@ export function createApiRouter({ game, auth, limiter, qr, config }) {
       if (pathname === '/api/admin/settings' && method === 'PATCH') return sendJson(response, await game.updateSettings(await readJson(request)));
       const inventory = pathname.match(/^\/api\/admin\/inventory\/([\w-]+)$/);
       if (inventory && method === 'PATCH') return sendJson(response, await game.updateInventory(inventory[1], await readJson(request)));
-      const coupon = pathname.match(/^\/api\/admin\/coupons\/(OLV-[A-F0-9]{12})(\/redeem)?$/);
+      const coupon = pathname.match(/^\/api\/admin\/coupons\/((?:OLV|TST)-[A-F0-9]{12})(\/redeem)?$/);
       if (coupon && !coupon[2] && method === 'GET') return sendJson(response, await game.getCoupon(coupon[1], true));
       if (coupon?.[2] && method === 'POST') {
         requireFields(await readJson(request), []);
@@ -93,7 +93,7 @@ export function createApiRouter({ game, auth, limiter, qr, config }) {
       const data = await game.getCoupon(coupon[1]);
       if (!coupon[2]) return sendJson(response, data);
       response.writeHead(200, { 'Content-Type': 'image/png' });
-      response.end(await qr(`${config.publicUrl}/admin.html#redeem=${data.code}`));
+      response.end(await qr(`${config.publicUrl}/admin.html${data.testOnly ? `?test=${data.code}` : ''}#redeem=${data.code}`));
       return;
     }
     throw new AppError(404, 'NOT_FOUND', 'La operación no existe.');

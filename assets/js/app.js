@@ -91,8 +91,8 @@ async function refreshWallet() {
       image.src = coupon.prize.image;
       image.alt = '';
       const copy = element('span', 'wallet-item__copy');
-      copy.append(element('strong', '', coupon.prize.name), element('small', '', coupon.code), element('small', '', `Vence ${formatDate(coupon.expiresAt)}`));
-      link.append(image, copy, statusChip(coupon.status));
+      copy.append(element('strong', '', coupon.prize.name), element('small', '', coupon.code), element('small', '', coupon.testOnly ? 'Prueba sin vencimiento · no canjeable' : `Vence ${formatDate(coupon.expiresAt)}`));
+      link.append(image, copy, statusChip(coupon.status, coupon.testOnly));
       list.append(link);
     });
     content.replaceChildren(list);
@@ -161,6 +161,11 @@ function showResult(result) {
     $('#result-description').textContent = coupon.status === 'active'
       ? `¡Ganaste! ${coupon.prize.description} Guarda tu cupón y muéstralo en el local antes de su vencimiento.`
       : `Recuperamos tu participación original. El cupón está ${coupon.status === 'redeemed' ? 'canjeado' : 'vencido'}; no es un premio nuevo.`;
+    if (coupon.testOnly) {
+      $('#result-eyebrow').textContent = 'PRUEBA · SIN VALIDEZ PARA CANJE';
+      $('#result-title').textContent = 'Tu cupón ganador de prueba.';
+      $('#result-description').textContent = 'Se mantiene activo y sin vencimiento hasta que solicites eliminarlo. No reserva inventario ni permite canjes reales.';
+    }
     renderFramedCoupon(coupon, { name: 'result-prize-name', code: 'result-coupon-code', qr: 'result-coupon-qr', expiry: 'result-coupon-expiry' });
     $('#open-winner-link').href = couponUrl(coupon);
   } else {
