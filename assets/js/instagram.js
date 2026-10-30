@@ -30,7 +30,7 @@ export function initializeInstagramLinks() {
         message(status, 'Clic registrado. No confirma visita ni seguimiento.', 'success');
       } catch (error) {
         if (error.status >= 400 && error.status < 500 && error.status !== 429) pending.delete(link);
-        message(status, 'No se pudo registrar el clic. El enlace sigue disponible; puedes reintentar.', 'error');
+        message(status, 'No pudimos confirmar el registro del clic. El enlace sigue disponible; puedes reintentar.', 'error');
       } finally { inFlight.delete(link); }
     };
     link.addEventListener('click', record);

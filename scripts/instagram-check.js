@@ -82,7 +82,7 @@ try {
       await route.abort('connectionreset');
     }, { times: 1 });
     await open('home');
-    await expect(page.locator('#instagram-home-status')).toContainText('No se pudo registrar');
+    await expect(page.locator('#instagram-home-status')).toContainText('No pudimos confirmar');
     expect(app.store.state.instagramClicks.total).toBe(2);
     await open('home');
     await expect(page.locator('#instagram-home-status')).toContainText('Clic registrado');
@@ -122,7 +122,7 @@ try {
     const before = business();
     await page.route('**/api/instagram/clicks', route => route.abort('internetdisconnected'));
     await open('coupon');
-    await expect(page.locator('#instagram-coupon-status')).toContainText('No se pudo registrar');
+    await expect(page.locator('#instagram-coupon-status')).toContainText('No pudimos confirmar');
     expect(app.store.state.instagramClicks.total).toBe(4);
     expect(business()).toEqual(before);
     await expect(page.locator('#coupon-status')).toHaveText('Por disfrutar');
