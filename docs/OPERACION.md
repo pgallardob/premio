@@ -1,6 +1,6 @@
 # Operar Los Olivos desde el local
 
-La web y la API utilizan HTTPS en GitHub Pages y Neon. La campaña continúa pausada, sin participaciones ni cupones, con 58 unidades cargadas. Antes de abrir, complete los requisitos de [Neon](NEON.md). La guía de [Producción](PRODUCCION.md) describe la alternativa con servidor propio y archivo.
+La web y la API utilizan HTTPS en GitHub Pages y Neon. Consulte [Avance](AVANCE.md) para el estado real; no vuelva a cargar el inventario ni reinicie registros para probar. La guía de [Producción](PRODUCCION.md) describe la alternativa con servidor propio y archivo.
 
 ## Inventario vigente
 
@@ -15,7 +15,7 @@ El 30 de octubre de 2026 se aplicó el catálogo real solicitado por el propieta
 | Agenda | `planner` | 3 |
 | **Total** | | **58** |
 
-**Carga aplicada, campaña no activada.** Las cifras son unidades disponibles al efectuar la carga; cambian al reservar o vencer cupones. Antes de reponer, consulte inventario y reservas para no sobrescribir cambios posteriores ni contar dos veces una reserva. No vuelva a ejecutar el plan inicial: sus comprobaciones de stock previo rechazan una aplicación repetida.
+**Carga inicial aplicada.** Las cifras son unidades disponibles al efectuar la carga; cambian al reservar o vencer cupones. Antes de reponer, consulte inventario y reservas para no sobrescribir cambios posteriores ni contar dos veces una reserva. No vuelva a ejecutar el plan inicial: sus comprobaciones de stock previo rechazan una aplicación repetida.
 
 ## Preparar la campaña
 
@@ -27,7 +27,15 @@ El 30 de octubre de 2026 se aplicó el catálogo real solicitado por el propieta
 
 La protección de una participación cada 24 horas es obligatoria y no se puede desactivar. Identifica navegadores, no personas. El contador central sigue decidiendo el orden y el premio se selecciona entre tipos con stock.
 
-Mientras la campaña esté pausada o no haya existencias, los botones de participación permanecen deshabilitados. El contacto solicitado ya está guardado; falta la confirmación del propietario desde el panel. El teléfono no implica aprobación automática de las bases. Contacto y confirmación persisten entre reinicios; al modificar condiciones publicadas se requiere una nueva confirmación.
+Mientras la campaña esté pausada o no haya existencias, los botones de participación permanecen deshabilitados, salvo para recuperar un resultado ya aceptado. El contacto y la confirmación persisten entre reinicios; al modificar condiciones publicadas se requiere una nueva confirmación.
+
+## Validar una visita sin exigir compra
+
+El [recorrido de visitas](VISITAS.md) requiere habilitar **Validación presencial sin compra** y confirmar nuevamente las bases en **La experiencia**. No modifica stock, contador ni participaciones anteriores.
+
+Con el requisito habilitado, el visitante pulsa **Validar mi visita**. En **Visitas**, compare el código `VIS-…` con la pantalla de su teléfono presente, marque la confirmación y autorice. También puede escanear su QR e ingresar al panel. No solicite ticket ni pago; no apruebe fotos o mensajes remotos. El visitante todavía debe pulsar **Descubrir mi suerte**: autorizar no participa ni entrega premios.
+
+Solicitud y autorización vencen a los diez minutos cada una. El permiso funciona una sola vez en ese navegador. No autorice códigos sucesivos para eludir la protección de 24 horas; este control no verifica la identidad de personas. Cerrar el aviso conserva la solicitud; cancelarla la retira si todavía no se ha usado.
 
 ## Actualización del panel
 

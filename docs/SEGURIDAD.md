@@ -1,6 +1,6 @@
 # Un premio se confirma en el servidor, no en una captura
 
-La aplicación tiene controles concretos de consistencia y acceso. La publicación Pages + Neon ya utiliza HTTPS y credenciales nuevas; permanece pausada hasta confirmar inventario, bases/privacidad, contacto y respaldos. La fase manual anterior se cerró y sus registros se eliminaron.
+La aplicación tiene controles concretos de consistencia y acceso. La publicación Pages + Neon utiliza HTTPS y credenciales nuevas; el estado vigente figura en [Avance](AVANCE.md). Una instalación nueva permanece pausada hasta confirmar inventario, bases/privacidad y contacto. Los respaldos externos siguen siendo una tarea operativa pendiente.
 
 ## Controles presentes
 
@@ -8,6 +8,7 @@ La aplicación tiene controles concretos de consistencia y acceso. La publicaci�
 |---|---|
 | Dos ganadores por una carrera | Bloqueo transaccional de filas en Neon; cola y escritor único en el despliegue con archivo. |
 | Reintento por mala conexión | Clave idempotente persistida por navegador. |
+| Participación remota con una foto del QR | Requisito opcional `presenceRequired`: aprobación explícita del personal, permiso ligado al navegador, diez minutos y consumo único transaccional. Depende de que el personal compruebe el teléfono presente. |
 | Cupones sin unidades | Reserva al emitir; liberación solo por vencimiento. |
 | Doble entrega | Transición atómica de vigente a canjeado. |
 | Acceso administrativo | Contraseña derivada con scrypt y sesión aleatoria. |
@@ -30,11 +31,13 @@ La aplicación tiene controles concretos de consistencia y acceso. La publicaci�
 - Existen comandos exclusivos de respaldo y restauración validados. La programación automática y el almacenamiento externo todavía deben configurarse en el alojamiento elegido.
 - Las pruebas no constituyen una auditoría de penetración.
 
-## Revisión pendiente: presencia e Instagram
+## Presencia sin compra e Instagram pendiente
 
-Estas mejoras están en análisis, no activadas. El QR público contiene una URL compartible; no certifica un escaneo físico, la ubicación ni una compra. El límite de 24 horas identifica al navegador y el contador de premios es global, no una garantía por cada 20 intentos personales. Cambiar de navegador o borrar su almacenamiento permite obtener otro identificador.
+El QR público contiene una URL compartible; no certifica un escaneo físico, la ubicación ni una compra. El límite de 24 horas identifica al navegador y el contador de premios es global, no una garantía por cada 20 intentos personales. Cambiar de navegador o borrar su almacenamiento permite obtener otro identificador, pero no sustituye una autorización de visita cuando se exige.
 
-La propuesta es autorizar cada participación con un código de un solo uso entregado por caja, consumido atómicamente en el servidor y con vencimiento breve. Un código por ticket limita entradas a compras efectivas, pero exigir compra modificaría las bases actuales de «no requiere compra»: el propietario debe decidir primero entre compra y visita. No se deben invalidar participaciones ya aceptadas ni presentar el código diario compartido como prueba de compra.
+La decisión del propietario es **exigir visita, no compra**. El [flujo de visitas](VISITAS.md) está implementado: el cliente muestra su solicitud en el teléfono y el personal confirma presencia desde el panel. La autorización dura diez minutos, sirve para ese navegador y se consume con la participación. Escanear el QR no aprueba ni revela un resultado. No se invalidan participaciones anteriores y no se utiliza un código diario compartido como prueba fuerte de presencia. Habilitar el requisito necesita una nueva confirmación de bases y privacidad; publicar código no lo activa automáticamente.
+
+El control es una atestación humana, no una prueba criptográfica de ubicación o identidad. Personal que apruebe códigos remotos o una persona que colabore reenviándolos puede debilitarlo. Debe evitarse autorizar códigos sucesivos para eludir las 24 horas. El cliente conserva la recuperación idempotente aunque su autorización ya se haya consumido o vencido.
 
 Para Instagram no sirven el número total de seguidores ni un botón «Ya te sigo». La [API oficial de perfiles de mensajería](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/messaging-api/user-profile) ofrece `is_user_follow_business` a partir del ID recibido en una interacción consentida, como un DM iniciado por la persona. Requiere una cuenta profesional, autorización, permisos y webhooks. Comprueba el seguimiento actual, no una fecha de comienzo ni permanencia futura. No hay cuenta o aplicación Meta conectada en este proyecto.
 

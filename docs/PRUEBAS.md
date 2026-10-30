@@ -8,6 +8,7 @@ Los tests HTTP y de navegador crean su propio directorio temporal y su propio se
 npm run check
 npm test
 npm run test:browser
+npm run test:visits
 npm run test:pwa
 ```
 
@@ -43,6 +44,14 @@ npm run test:pwa
 17. Un enlace privado se puede conservar en otro navegador de forma idempotente; el propietario conserva el cupón y no cambian contador, stock ni estado de canje. Se rechazan códigos públicos, tokens desconocidos y orígenes no autorizados.
 
 La suite adicional comprueba configuración pública segura, confianza explícita del proxy, valores iniciales sin stock, protección inmutable, dominio/cookie Secure, eliminación con confirmación y escritor detenido, y respaldo/restauración consistente.
+
+## Validación presencial sin compra
+
+`tests/visits.test.js` prueba por HTTP la vinculación al navegador, vencimientos exactos, sesión/CSRF/origen, declaración explícita del personal, cancelación propia, compatibilidad del estado anterior y capacidad limitada. Las carreras con claves diferentes se prueban incluso sin el cooldown para aislar la garantía de consumo único. Los rechazos por pausa, stock, revisión y código diario no consumen la autorización. La revisión de condiciones nuevas no reinicia registros anteriores.
+
+`npm run test:visits` ejecuta cinco recorridos adicionales en Google Chrome: revisión previa del propietario, solicitud adaptable, comparación del código y enlace QR, aprobación sin participación automática, recuperación de una respuesta perdida y cancelación/vencimiento. La pérdida de respuesta se produce después de ejecutar el servidor real aislado; la recuperación después de recargar y vencer la visita no genera una segunda entrada. Las capturas quedan en `artifacts/visits/`, fuera de Git.
+
+`npm run test:neon` comprueba el mismo permiso entre instancias con bloqueos reales de PostgreSQL y sesiones persistidas, dentro de esquemas temporales eliminados al terminar. **No se declara presencia física para aprobar automáticamente visitas en la campaña real.** Las comprobaciones de publicación leen el estado o ejercitan rechazos sin emitir participaciones ni premios.
 
 ## Comprobaciones PWA
 

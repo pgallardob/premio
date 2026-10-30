@@ -28,6 +28,7 @@ Abra `http://localhost:4173`. El comando de configuración muestra una contrase�
 | Mis cupones | `/#mis-cupones` |
 | Administración | `/admin.html` |
 | Configuración de campaña | `/admin.html#settings` |
+| Validación presencial sin compra | `/admin.html#visits` |
 | Instalación Android / iPhone | `/instalar.html` |
 | Cartel imprimible | `/cartel.html` |
 | Estado del proceso | `/healthz` |
@@ -37,6 +38,7 @@ Abra `http://localhost:4173`. El comando de configuración muestra una contrase�
 ```sh
 npm run verify
 npm run test:browser
+npm run test:visits
 npm run test:pwa
 npm run production:check
 ```
@@ -63,6 +65,7 @@ Esta entrega es una **PWA**, no un APK, IPA ni una publicación en App Store/Goo
 - [Neon Functions, PostgreSQL y GitHub Pages](docs/NEON.md)
 - [Instalación Android / iOS](docs/INSTALACION_MOVIL.md)
 - [Operación del local](docs/OPERACION.md)
+- [Autorizar visitas sin exigir compra](docs/VISITAS.md)
 - [Arquitectura](docs/ARQUITECTURA.md), [seguridad](docs/SEGURIDAD.md) y [diseño](docs/DISENO.md)
 - [Contrato HTTP](docs/API.md) · [OpenAPI](docs/api.openapi.json)
 - [Pruebas](docs/PRUEBAS.md), [requisitos](docs/REQUISITOS.md) y [dependencias](docs/DEPENDENCIAS.md)
