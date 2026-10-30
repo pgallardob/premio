@@ -52,6 +52,9 @@ export function createApiRouter({ game, auth, limiter, qr, config }) {
       }
       if (pathname === '/api/admin/dashboard' && method === 'GET') return sendJson(response, await game.dashboard());
       if (pathname === '/api/admin/settings' && method === 'PATCH') return sendJson(response, await game.updateSettings(await readJson(request)));
+      const visit = pathname.match(/^\/api\/admin\/visits\/([A-Fa-f0-9]{32}|VIS-[A-Fa-f0-9]{8})(\/approve)?$/);
+      if (visit && !visit[2] && method === 'GET') return sendJson(response, await game.visits.get(visit[1]));
+      if (visit?.[2] && method === 'POST') return sendJson(response, await game.visits.approve(visit[1], await readJson(request)));
       const inventory = pathname.match(/^\/api\/admin\/inventory\/([\w-]+)$/);
       if (inventory && method === 'PATCH') return sendJson(response, await game.updateInventory(inventory[1], await readJson(request)));
       const coupon = pathname.match(/^\/api\/admin\/coupons\/((?:OLV|TST)-[A-F0-9]{12})(\/redeem)?$/);
@@ -73,6 +76,24 @@ export function createApiRouter({ game, auth, limiter, qr, config }) {
     if (pathname === '/api/status' && method === 'GET') {
       auth.device(request, response);
       return sendJson(response, await game.status());
+    }
+    if (pathname === '/api/visits/current' && method === 'GET') return sendJson(response, await game.visits.current(auth.device(request, response)));
+    if (pathname === '/api/visits' && method === 'POST') {
+      await limiter.take(`visit:${ip}`, 20, 60_000);
+      requireFields(await readJson(request), []);
+      return sendJson(response, await game.visits.create(auth.device(request, response)));
+    }
+    if (pathname === '/api/visits/cancel' && method === 'POST') {
+      const input = await readJson(request);
+      requireFields(input, ['visitId']);
+      return sendJson(response, await game.visits.cancel(auth.device(request, response), input.visitId));
+    }
+    const visitQr = pathname.match(/^\/api\/visits\/([a-f0-9]{32})\/qr$/);
+    if (visitQr && method === 'GET') {
+      const visit = await game.visits.get(visitQr[1]);
+      response.writeHead(200, { 'Content-Type': 'image/png' });
+      response.end(await qr(`${config.publicUrl}/admin.html#visit=${visit.id}`));
+      return;
     }
     if (pathname === '/api/participations' && method === 'POST') {
       await limiter.take(`participate:${ip}`, 60, 60_000);

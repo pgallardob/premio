@@ -46,7 +46,7 @@ async function fixture(t) {
       if (data?.csrfToken) csrf = data.csrfToken;
       return { status: response.status, data, headers: response.headers };
     };
-    call.participate = (key = randomUUID()) => call('/api/participations', { method: 'POST', body: {}, headers: { 'Idempotency-Key': key } });
+    call.participate = (key = randomUUID(), body = {}) => call('/api/participations', { method: 'POST', body, headers: { 'Idempotency-Key': key } });
     call.login = () => call('/api/admin/login', { method: 'POST', body: { password } });
     return call;
   };
@@ -218,4 +218,71 @@ integration('one held test winner survives instances, never redeems and leaves a
   const { testCoupons: remaining, ...after } = store.state;
   assert.equal(remaining.length, 0);
   assert.deepEqual(after, before);
+});
+
+integration('Neon visit approval is private, browser-bound and persistent across cold starts', async (t) => {
+  const { store, client, restart } = await fixture(t);
+  const admin = client();
+  const visitor = client();
+  const stranger = client();
+  await admin.login();
+  const changed = await admin('/api/admin/settings', { method: 'PATCH', body: { presenceRequired: true, promotionReviewed: true } });
+  assert.equal(changed.status, 200);
+  assert.equal((await visitor.participate()).data.error.code, 'VISIT_REQUIRED');
+  const visit = (await visitor('/api/visits', { method: 'POST', body: {} })).data.visit;
+  assert.equal((await stranger(`/api/admin/visits/${visit.id}`)).status, 401);
+  assert.equal((await stranger(`/api/admin/visits/${visit.id}/approve`, { method: 'POST', body: { present: true } })).status, 401);
+  assert.equal((await admin(`/api/admin/visits/${visit.id}/approve`, { method: 'POST', body: { present: true }, headers: { 'X-CSRF-Token': 'wrong' } })).status, 403);
+  const approved = await admin(`/api/admin/visits/${visit.id}/approve`, { method: 'POST', body: { present: true } });
+  assert.equal(approved.data.status, 'approved');
+  assert.equal(store.state.totalParticipations, 0);
+  restart();
+  assert.equal((await visitor('/api/visits/current')).data.visit.id, visit.id);
+  assert.equal((await stranger.participate(randomUUID(), { visitId: visit.id })).data.error.code, 'VISIT_REQUIRED');
+  const key = randomUUID();
+  assert.equal((await visitor.participate(key, { visitId: visit.id })).data.id, 1);
+  restart();
+  assert.equal((await visitor.participate(key)).data.replayed, true);
+  assert.equal((await visitor('/api/visits', { method: 'POST', body: {} })).data.error.code, 'COOLDOWN');
+  await store.initialize();
+  assert.equal(store.state.visits[0].status, 'used');
+  assert.equal(store.state.participations[0].visitId, visit.id);
+  assert.equal(store.state.audit.filter((item) => item.action === 'visit_approved').length, 1);
+});
+
+integration('Postgres row locks prevent pass reuse across independent instances even without cooldown', async (t) => {
+  const { store, pool, config } = await fixture(t);
+  await store.transaction((state) => { state.settings.presenceRequired = true; state.settings.cooldownEnabled = false; });
+  const other = new PostgresStore(pool, catalog, { schema: store.schema.slice(1, -1) });
+  await other.initialize();
+  const games = [store, other].map((writer) => new Game(writer, catalog, config));
+  const device = randomUUID();
+  const visit = (await games[0].visits.create(device)).visit;
+  const approvals = await Promise.all(games.map((game) => game.visits.approve(visit.id, { present: true })));
+  assert.deepEqual(approvals[0], approvals[1]);
+  const results = await Promise.allSettled(Array.from({ length: 8 }, (_, i) => games[i % 2].participate(device, randomUUID(), { visitId: visit.id })));
+  assert.equal(results.filter((item) => item.status === 'fulfilled').length, 1);
+  assert(results.filter((item) => item.status === 'rejected').every((item) => item.reason.code === 'VISIT_REQUIRED'));
+  await other.initialize();
+  assert.equal(other.state.totalParticipations, 1);
+  assert.equal(other.state.inventory.opener, 1);
+  assert.equal(other.state.audit.filter((item) => item.action === 'visit_approved').length, 1);
+});
+
+integration('Postgres eligibility review is prospective and rejects unreviewed activation atomically', async (t) => {
+  const { store, client } = await fixture(t);
+  const admin = client();
+  const visitor = client();
+  await admin.login();
+  const key = randomUUID();
+  await visitor.participate(key);
+  const before = structuredClone(store.state);
+  assert.equal((await admin('/api/admin/settings', { method: 'PATCH', body: { presenceRequired: true } })).status, 400);
+  await store.initialize();
+  assert.deepEqual(store.state, before);
+  assert.equal((await admin('/api/admin/settings', { method: 'PATCH', body: { presenceRequired: true, promotionReviewed: true } })).status, 200);
+  assert.deepEqual(store.state.participations, before.participations);
+  assert.deepEqual(store.state.inventory, before.inventory);
+  assert.equal((await visitor.participate(key)).data.replayed, true);
+  assert.equal((await client().participate()).data.error.code, 'VISIT_REQUIRED');
 });

@@ -7,8 +7,8 @@ Desde la versión 0.2.0 no se expone un modo de prueba. Una instalación nueva e
 ## Participar sin registrar vistas como jugadas
 
 1. `GET /api/status` consulta reglas y establece una cookie firmada (Node) o devuelve `X-Olivos-Device` (Neon), sin registrar una participación.
-2. El usuario presiona el botón.
-3. `POST /api/participations` envía JSON y una nueva `Idempotency-Key` de 16 a 80 caracteres alfanuméricos, guiones o guiones bajos.
+2. Si `rules.presenceRequired` es verdadero, el usuario solicita una visita, muestra su código al personal físicamente presente y espera la aprobación. No se requiere compra.
+3. El usuario presiona el botón. `POST /api/participations` envía `visitId` cuando corresponde y una nueva `Idempotency-Key` de 16 a 80 caracteres alfanuméricos, guiones o guiones bajos.
 4. Si la respuesta es incierta, se reintenta con **la misma clave y el mismo identificador firmado de navegador**.
 
 Un resultado aceptado siempre responde `200`, sea ganador, no ganador o repetición idempotente. El campo `replayed` permite distinguir el último caso. Un error devuelve `{ "error": { "code": "...", "message": "..." } }`.
@@ -20,6 +20,9 @@ Un resultado aceptado siempre responde `200`, sea ganador, no ganador o repetici
 | GET | `/api/status` | Campaña, reglas, catálogo y stock disponible. |
 | GET | `/healthz` | Salud mínima del proceso, sin información de premios o sesiones. |
 | POST | `/api/participations` | Participación y cupón privado si ganó. |
+| GET / POST | `/api/visits/current` / `/api/visits` | Leer o solicitar una validación vinculada al navegador, sin participar. |
+| POST | `/api/visits/cancel` | Cancelar una solicitud propia todavía no consumida. |
+| GET | `/api/visits/{visitId}/qr` | QR de búsqueda administrativa; no concede permiso. |
 | GET | `/api/wallet` | Cupones del navegador reconocido por cookie. |
 | POST | `/api/wallet/coupons` | Guardar en este navegador un cupón mediante su token privado. |
 | GET | `/api/coupons/{token}` | Cupón por token privado de 256 bits. |
@@ -42,6 +45,8 @@ La sesión dura ocho horas. Node la conserva en memoria; Neon persiste su hash y
 | POST | `/api/admin/logout` | Revocar sesión. |
 | GET | `/api/admin/dashboard` | Totales, actividad, cupones, inventario y reglas. |
 | PATCH | `/api/admin/settings` | Cambiar campos permitidos de configuración. |
+| GET | `/api/admin/visits/{id-o-código}` | Comparar la solicitud con el teléfono presente; no aprueba. |
+| POST | `/api/admin/visits/{id-o-código}/approve` | Atestación `present: true` del personal autenticado, sin exigir compra. |
 | PATCH | `/api/admin/inventory/{prizeId}` | Establecer `stock` disponible, de 0 a 10000. |
 | GET | `/api/admin/coupons/{code}` | Validar el estado sin modificarlo. |
 | POST | `/api/admin/coupons/{code}/redeem` | Confirmar un solo canje con cuerpo `{}`. |
@@ -53,7 +58,9 @@ La sesión dura ocho horas. Node la conserva en memoria; Neon persiste su hash y
 
 `PATCH /api/admin/settings` acepta `promotionContact` (texto público de hasta 200 caracteres) y `promotionReviewed` (confirmación explícita del administrador). El servidor registra `promotionReviewedAt`; ese campo no puede enviarse ni falsificarse desde el cliente. Guardar un contacto no aprueba las bases ni activa la campaña.
 
-La activación pública exige contacto, revisión y unidades disponibles del catálogo. Cambiar contacto, frecuencia, vigencia o verificación diaria invalida la revisión anterior si no se reconfirma expresamente. La confirmación queda persistida y también se utiliza al reiniciar; las variables de despliegue sirven solo de compatibilidad para instalaciones anteriores.
+La activación pública exige contacto, revisión y unidades disponibles del catálogo. Cambiar contacto, frecuencia, vigencia, verificación diaria o `presenceRequired` invalida la revisión anterior si no se reconfirma expresamente. La confirmación queda persistida y también se utiliza al reiniciar; las variables de despliegue sirven solo de compatibilidad para instalaciones anteriores.
+
+La solicitud de visita vence en diez minutos y la aprobación concede otros diez. Un permiso autorizado no sirve para otro navegador ni para una segunda participación. Los reintentos de una participación ya aceptada no necesitan un permiso nuevo, aunque esté vencido o usado; si no se conserva su ID, se puede omitir al reenviar la misma clave. Consulte [Visitas](VISITAS.md) para activación, operación y límites de la comprobación humana.
 
 ### Respuestas de error
 
@@ -64,6 +71,9 @@ La activación pública exige contacto, revisión y unidades disponibles del cat
 | `FORBIDDEN` | 403 | Revisar origen o restaurar token CSRF. |
 | `DAILY_CODE_REQUIRED` | 403 | Solicitar el código actual visible en el local. |
 | `NOT_FOUND` | 404 | Revisar el enlace o código; no enumerar valores. |
+| `VISIT_NOT_FOUND` | 404 | Solicitar un código nuevo; el anterior no existe o venció. |
+| `VISIT_REQUIRED` | 409 | Obtener la aprobación presencial para este navegador; no se contó la solicitud. |
+| `VISIT_USED` / `VISITS_DISABLED` | 409 | No reaprovechar el permiso o revisar si el requisito está habilitado. |
 | `CAMPAIGN_PAUSED` | 409 | Informar pausa; no sumar participación. |
 | `PROMOTION_NOT_READY` | 409 | Completar la configuración de la campaña; no se contó participación. |
 | `CYCLE_IN_PROGRESS` | 409 | Esperar a completar el ciclo para cambiar frecuencia. |
