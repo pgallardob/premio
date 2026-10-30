@@ -55,7 +55,9 @@ Cuenta del local: [@comercializadora_los_olivos_](https://www.instagram.com/come
 
 Se eligió **No usar mi información de contacto**. Los campos empresariales de correo, teléfono, WhatsApp y dirección se verificaron vacíos; no se agregaron datos ni se vincularon cuentas de Facebook, publicidad o suscripciones. La conversión por sí sola no verifica seguidores ni conecta la promoción con la API.
 
-1. Confirmar si el propietario ya tiene una cuenta en Meta for Developers y una aplicación para configurar el producto Instagram con inicio de sesión de Instagram. El propietario debe iniciar sesión personalmente; no compartir contraseñas ni códigos de acceso por chat. Continuar una pregunta a la vez.
+El propietario completó la verificación de Meta personalmente. El acceso a **Mis apps** está comprobado y la lista observada no contiene aplicaciones. Se abrió **Crear app → Detalles de la app**, sin enviar el formulario ni crear recursos. No se leyeron contraseñas, códigos de verificación ni el valor del correo de contacto.
+
+1. Confirmar el nombre propuesto **Los Olivos Premio** y el correo de contacto que Meta muestra precompletado antes de crear la app. Después, configurar el producto Instagram con inicio de sesión de Instagram. El propietario debe completar personalmente accesos y verificaciones; continuar una pregunta a la vez.
 2. Definir el contrato de verificación antes de implementar el requisito. La cuenta, aplicación Meta, permisos y credenciales todavía no están conectados.
 3. Revisar inventario y reservas antes de reponer; no repetir la carga inicial ni restaurar historial. Mantener pendientes las comprobaciones Android/iPhone físicas y un canje comercial de un solo uso.
 4. Configurar respaldo PostgreSQL externo, calendario y verificación de restauración.
