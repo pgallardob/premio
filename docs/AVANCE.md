@@ -2,7 +2,7 @@
 
 Actualizado el 30 de octubre de 2026. La web utiliza GitHub Pages y Neon Functions con PostgreSQL en el plan Free. No depende de mantener encendida la computadora. **La última consulta confirma la campaña activa, con 58 unidades, dos participaciones y ningún cupón comercial emitido. No cambiar estos valores para forzar una prueba ganadora.**
 
-La versión 0.3.0 está publicada en ambos servicios. El [flujo de visitas](VISITAS.md) está disponible, pero **`presenceRequired` continúa en falso hasta que el propietario confirme las bases y la privacidad actualizadas**. Mientras no se habilite, el requisito nuevo no bloquea participaciones remotas. La decisión es presencia física, sin compra; Instagram todavía no está conectado.
+La versión 0.3.0 está publicada en ambos servicios y **la validación presencial sin compra ya está habilitada (`presenceRequired: true`)**. El propietario confirmó la revisión de las bases y la privacidad y autorizó expresamente activarla. El servidor registró la nueva revisión el `2026-10-30T18:33:19.434Z`. Una participación nueva requiere la aprobación del personal en el [flujo de visitas](VISITAS.md); Instagram todavía no está conectado.
 
 ## Accesos
 
@@ -17,7 +17,7 @@ La contraseña administrativa de publicación es distinta de la local. Se conser
 
 El propietario reemplazó el plan anterior por **20 destapadores Monster, 20 galletas mini Costa, 10 Jokey, 5 poleras y 3 agendas: 58 unidades en total**. La carga se aplicó en una transacción de PostgreSQL, con controles para no sobrescribir cambios posteriores ni duplicar la reposición. Consulte [Operación del local](OPERACION.md#inventario-vigente).
 
-La campaña fue habilitada después de incorporar la confirmación del panel. Se conservan la protección de 24 horas, el contador y el stock reales; la auditoría consultada contiene siete movimientos. El plan anterior de bebidas, snacks y café quedó sin efecto y no debe aplicarse.
+La campaña fue habilitada después de incorporar la confirmación del panel. Se conservan la protección de 24 horas, el contador y el stock reales; la última auditoría contiene nueve movimientos. Había ocho antes de activar la validación presencial y la activación agregó uno, sin eliminar los anteriores. El plan de bebidas, snacks y café quedó sin efecto y no debe aplicarse.
 
 El catálogo usa identificadores nuevos y cinco ilustraciones referenciales; no son fotografías de los productos. Los identificadores anteriores y sus recursos se conservan para no romper posibles referencias históricas. Los valores iniciales de una instalación nueva siguen en cero.
 
@@ -39,12 +39,14 @@ El propietario confirmó que el [QR ganador de prueba](CUPON_PRUEBA.md) funcion�
 
 Evidencia: 56 pruebas sin base externa aprobadas; la suite Neon pasó 14/14, incluidos trece escenarios con PostgreSQL real y un control del identificador SQL. Pasaron los 21 recorridos existentes de Chrome, cinco grupos nuevos de visitas, siete comprobaciones PWA y la compilación estática. La web pública se verificó con Chrome contra Neon sin registrar participaciones ni aprobar visitantes. No quedan esquemas de pruebas. El ejemplo ganador privado real sigue eliminado.
 
-La publicación Pages corresponde a `675e89dc26ca71098a25e903a3983638a64b8944`; el código funcional llega a `f90c38f`. La huella del estado de negocio antes y después de publicar coincide: `c40f5ac7b342d8b9c99773451f63e34e822272f7cff3ffeb2d9ce2caa23c71bc`. Incluye reglas, historial, inventario, cupones y auditoría; siguen siendo siete movimientos, sin visitas pendientes ni cupones de prueba.
+La publicación Pages corresponde a `675e89dc26ca71098a25e903a3983638a64b8944`; el código funcional llega a `f90c38f`. La publicación inicial no alteró el estado de negocio: su huella fue `c40f5ac7b342d8b9c99773451f63e34e822272f7cff3ffeb2d9ce2caa23c71bc`. Después de activar el requisito, la huella actual es `e55d15617b5b7e7a09861f75bef7afd93696c0b279a3e06786294b5cbf3cf27e`; incluye las reglas y la auditoría actualizadas. Siguen disponibles 58 unidades y se conservan las dos participaciones, sin cupones comerciales, cupones de prueba ni visitas pendientes.
+
+La comprobación pública posterior a la activación usó Google Chrome: participar sin visita o con una visita pendiente devolvió `409 VISIT_REQUIRED`; intentar aprobar sin sesión devolvió `401`. Se generó y canceló únicamente la solicitud temporal de ese navegador, sin atestar presencia, aceptar participaciones o consumir inventario. El QR se cargó correctamente y no hubo errores JavaScript. El recorrido positivo con personal y teléfono físicamente presentes sigue pendiente.
 
 ## Retomar en la próxima sesión
 
-1. Obtener la confirmación del propietario sobre las bases y privacidad nuevas; solo entonces habilitar **Validación presencial sin compra** desde **La experiencia**, reconfirmando la revisión. No aprobar visitas automáticamente durante comprobaciones remotas.
-2. Verificar físicamente una solicitud, su autorización desde **Visitas** y el resultado en el mismo teléfono. No exigir ticket o pago. Después, definir cuenta profesional y permisos oficiales de Instagram, una pregunta a la vez.
+1. Verificar físicamente una solicitud, su autorización desde **Visitas** y el resultado en el mismo teléfono. El requisito ya está activo; no exigir ticket o pago ni aprobar visitas automáticamente durante comprobaciones remotas.
+2. Después de esa comprobación, definir cuenta profesional y permisos oficiales de Instagram, una pregunta a la vez. No presentar todavía el seguimiento como verificado.
 3. Revisar inventario y reservas antes de reponer; no repetir la carga inicial ni restaurar historial. Mantener pendientes las comprobaciones Android/iPhone físicas y un canje comercial de un solo uso.
 4. Configurar respaldo PostgreSQL externo, calendario y verificación de restauración.
 
