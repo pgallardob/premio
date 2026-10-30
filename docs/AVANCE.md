@@ -43,10 +43,16 @@ La publicación Pages corresponde a `675e89dc26ca71098a25e903a3983638a64b8944`; 
 
 La comprobación pública posterior a la activación usó Google Chrome: participar sin visita o con una visita pendiente devolvió `409 VISIT_REQUIRED`; intentar aprobar sin sesión devolvió `401`. Se generó y canceló únicamente la solicitud temporal de ese navegador, sin atestar presencia, aceptar participaciones o consumir inventario. El QR se cargó correctamente y no hubo errores JavaScript. El recorrido positivo con personal y teléfono físicamente presentes sigue pendiente.
 
-## Retomar en la próxima sesión
+## Prueba pospuesta por el propietario
 
-1. Verificar físicamente una solicitud, su autorización desde **Visitas** y el resultado en el mismo teléfono. El requisito ya está activo; no exigir ticket o pago ni aprobar visitas automáticamente durante comprobaciones remotas.
-2. Después de esa comprobación, definir cuenta profesional y permisos oficiales de Instagram, una pregunta a la vez. No presentar todavía el seguimiento como verificado.
+- [ ] **Pendiente por ahora:** verificar físicamente una solicitud, su autorización desde **Visitas** y el resultado en el mismo teléfono. El propietario pidió posponer esta prueba y continuar con Instagram. No se considera aprobada ni bloquea la preparación de esa integración.
+
+La validación presencial permanece activa y sin compra. No exigir ticket o pago ni aprobar visitas automáticamente durante comprobaciones remotas. No volver a solicitar esta prueba como requisito para avanzar con Instagram mientras siga pospuesta.
+
+## Continuar con Instagram
+
+1. Identificar la cuenta del local y confirmar su tipo y la autorización oficial, una pregunta a la vez. El siguiente dato pendiente es su usuario `@`. No presentar todavía el seguimiento como verificado.
+2. Definir el contrato de verificación antes de implementar el requisito. La cuenta, aplicación Meta, permisos y credenciales todavía no están conectados.
 3. Revisar inventario y reservas antes de reponer; no repetir la carga inicial ni restaurar historial. Mantener pendientes las comprobaciones Android/iPhone físicas y un canje comercial de un solo uso.
 4. Configurar respaldo PostgreSQL externo, calendario y verificación de restauración.
 
