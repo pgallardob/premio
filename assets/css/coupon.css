@@ -95,3 +95,5 @@
   .poster-terms { font-size: 9pt; }
   .poster-print-warning:not(:empty) { display: block; color: #782b18; font-size: 8pt; font-weight: 600; line-height: 1.6; margin: 12px 0 0; }
 }
+.framed-coupon[data-test-only='true'] { outline: 2px dashed #a8cb73; outline-offset: 4px; }
+.framed-coupon[data-test-only='true'] .coupon-frame__expiry { font-weight: 800; }

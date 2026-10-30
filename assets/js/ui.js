@@ -1,4 +1,4 @@
-import { request, apiUrl } from './api.js?v=0.2.3';
+import { request, apiUrl } from './api.js?v=0.2.4';
 
 export const $ = (selector, scope = document) => scope.querySelector(selector);
 export const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
@@ -81,8 +81,8 @@ export function emptyState(title, description, iconName = 'spark') {
   return node;
 }
 
-export function statusChip(status) {
-  const node = element('span', 'status-chip', statusLabels[status] ?? status);
+export function statusChip(status, testOnly = false) {
+  const node = element('span', 'status-chip', testOnly ? 'Prueba · sin canje' : statusLabels[status] ?? status);
   node.dataset.status = status;
   return node;
 }
@@ -90,11 +90,20 @@ export function statusChip(status) {
 export function renderFramedCoupon(coupon, ids) {
   document.getElementById(ids.name).textContent = coupon.prize.name;
   document.getElementById(ids.code).textContent = coupon.code;
-  document.getElementById(ids.expiry).textContent = `Vence ${formatDate(coupon.expiresAt, true)} · Un solo canje`;
+  document.getElementById(ids.expiry).textContent = coupon.testOnly ? 'PRUEBA SIN VENCIMIENTO · NO CANJEABLE' : `Vence ${formatDate(coupon.expiresAt, true)} · Un solo canje`;
+  const frame = document.getElementById(ids.name).closest('.framed-coupon');
+  if (frame) {
+    frame.dataset.testOnly = String(coupon.testOnly === true);
+    const eyebrow = frame.querySelector('.coupon-frame__eyebrow');
+    if (eyebrow) {
+      eyebrow.dataset.originalText ??= eyebrow.textContent;
+      eyebrow.textContent = coupon.testOnly ? 'CUPÓN GANADOR DE PRUEBA' : eyebrow.dataset.originalText;
+    }
+  }
   document.getElementById(ids.qr).src = apiUrl(`/api/coupons/${coupon.token}/qr`);
 }
 
-export function couponUrl(coupon) { return `${location.origin}/premio/cupon.html#${coupon.token}`; }
+export function couponUrl(coupon) { return `${location.origin}/premio/cupon.html${coupon.testOnly ? `?test=${coupon.code}` : ''}#${coupon.token}`; }
 
 async function loadImage(source) {
   const image = new Image();
@@ -129,20 +138,20 @@ export async function downloadCoupon(coupon) {
   context.textAlign = 'center';
   context.fillStyle = '#5f6943';
   context.font = '700 15px Manrope, sans-serif';
-  context.fillText('TU PEQUEÑO GRAN MOMENTO', 384, 475);
+  context.fillText(coupon.testOnly ? 'PRUEBA · SIN VALIDEZ PARA CANJE' : 'TU PEQUEÑO GRAN MOMENTO', 384, 475);
   context.fillStyle = '#233b1c';
   context.font = '700 44px Syne, sans-serif';
   wrapCanvasText(context, coupon.prize.name, 384, 565, 510, 54);
   context.font = '600 19px Manrope, sans-serif';
-  context.fillText('Presenta este cupón en Los Olivos', 384, 682);
+  context.fillText(coupon.testOnly ? 'Ejemplo de cupón ganador. No es un premio real.' : 'Presenta este cupón en Los Olivos', 384, 682);
   context.font = '800 27px Manrope, sans-serif';
   context.fillText(coupon.code, 384, 750);
   context.drawImage(qr, 264, 805, 240, 240);
   context.font = '600 17px Manrope, sans-serif';
-  context.fillText(`Vence ${formatDate(coupon.expiresAt, true)}`, 384, 1110);
+  context.fillText(coupon.testOnly ? 'Sin vencimiento durante la prueba' : `Vence ${formatDate(coupon.expiresAt, true)}`, 384, 1110);
   context.font = '500 15px Manrope, sans-serif';
-  context.fillText(`Estado al descargar: ${statusLabels[coupon.status]}`, 384, 1150);
-  context.fillText('Un solo canje. El local verifica su estado en línea.', 384, 1182);
+  context.fillText(coupon.testOnly ? 'Prueba activa hasta su eliminación' : `Estado al descargar: ${statusLabels[coupon.status]}`, 384, 1150);
+  context.fillText(coupon.testOnly ? 'No reserva stock ni permite canje comercial.' : 'Un solo canje. El local verifica su estado en línea.', 384, 1182);
   const blob = await new Promise((resolve, reject) => canvas.toBlob((value) => value ? resolve(value) : reject(new Error('No se pudo crear la imagen.')), 'image/png'));
   const url = URL.createObjectURL(blob);
   const link = element('a');
