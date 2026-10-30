@@ -66,7 +66,7 @@ await transform(output);
 const catalog = JSON.parse(await readFile(join(root, 'config/prizes.json'), 'utf8'));
 const campaign = {
   active: false, availableStock: 0, publicUrl: siteUrl.href.replace(/\/$/, ''), promotionContact: '',
-  rules: { interval: 20, expiryDays: 5, cooldownEnabled: true, cooldownHours: 24, dailyCodeEnabled: false },
+  rules: { interval: 20, expiryDays: 5, cooldownEnabled: true, cooldownHours: 24, dailyCodeEnabled: false, presenceRequired: false },
   prizes: catalog.map(({ initialStock, ...prize }) => ({ ...prize, image: prefix(prize.image), stock: 0 })),
 };
 const configuration = { backendAvailable: Boolean(api), apiBaseUrl: api?.origin ?? '', bearerTransport: Boolean(api), adminRefreshMs: 15_000, staticCampaign: campaign,

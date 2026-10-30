@@ -35,16 +35,18 @@ try {
   await page.goto(base);
   const response = await statusResponse;
   expect(response.status()).toBe(200);
+  const status = await response.json();
   const expectedInventory = process.env.NEON_VERIFY_INITIAL_INVENTORY === 'true'
     ? JSON.parse(await readFile(join(root, 'deploy/inventory.json'), 'utf8')).items : null;
   if (expectedInventory) {
-    const status = await response.json();
     expect(status.availableStock).toBe(expectedInventory.reduce((sum, item) => sum + item.stock, 0));
     expect(status.prizes.map((prize) => ({ id: prize.id, stock: prize.stock }))).toEqual(expectedInventory.map((item) => ({ id: item.prizeId, stock: item.stock })));
   }
   await expect(page.locator('.prize-card')).toHaveCount(5);
-  await expect(page.locator('#campaign-status-label')).toHaveText('Experiencia en pausa');
-  await expect(page.locator('#participate-button')).toBeDisabled();
+  const campaignLabel = !status.active ? 'Experiencia en pausa' : status.availableStock === 0 ? 'Preparando sorpresas' : 'La sorpresa está activa';
+  await expect(page.locator('#campaign-status-label')).toHaveText(campaignLabel);
+  if (!status.active || status.availableStock === 0) await expect(page.locator('#participate-button')).toBeDisabled();
+  else await expect(page.locator('#participate-button')).toBeEnabled();
   expect(await page.locator('.prize-card__image').evaluateAll(async (images) => {
     for (const image of images) image.loading = 'eager';
     await Promise.all(images.map((image) => image.decode()));
@@ -57,13 +59,13 @@ try {
   await expect(page.locator('#wallet-content')).toContainText('Todavía no tienes cupones');
   await page.keyboard.press('Escape');
   await page.reload();
-  await expect(page.locator('#campaign-status-label')).toHaveText('Experiencia en pausa');
+  await expect(page.locator('#campaign-status-label')).toHaveText(campaignLabel);
   expect(await page.evaluate(() => localStorage.getItem('olivos_device_v1'))).toBe(device);
   for (const width of [320, 390, 800, 1366]) {
     await page.setViewportSize({ width, height: 844 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
   }
-  console.log('PASS Connected Pages uses real Neon CORS, persistent device identity and correctly paused campaign UI.');
+  console.log('PASS Connected Pages uses real Neon CORS, persistent device identity and the actual campaign state without participating.');
 
   await page.goto(`${base}admin.html`);
   await expect(page.locator('#login-button')).toBeEnabled();
@@ -73,6 +75,18 @@ try {
   const session = await page.evaluate(() => JSON.parse(sessionStorage.getItem('olivos_session_v1')).token);
   await page.reload();
   await expect(page.locator('#admin-shell')).toBeVisible({ timeout: 30_000 });
+  await page.locator('[data-panel="visits"]').click();
+  await expect(page.locator('#visit-lookup-form')).toBeVisible();
+  const missing = '0'.repeat(32);
+  const privateLookup = await page.evaluate(async (id) => {
+    const { request } = await import('/premio/assets/js/api.js');
+    try { await request(`/api/admin/visits/${id}`); return 200; } catch (error) { return error.status; }
+  }, missing);
+  expect(privateLookup).toBe(404);
+  await page.locator('[data-panel="settings"]').click();
+  if (status.rules.presenceRequired) await expect(page.locator('#setting-presence')).toBeChecked();
+  else await expect(page.locator('#setting-presence')).not.toBeChecked();
+  console.log('PASS Published visit panel and safe private lookup; eligibility flag matches live API and no presence was falsely approved.');
   if (process.env.NEON_VERIFY_PUBLICATION_UI === 'true') {
     await page.locator('a[href="#settings"]').first().click();
     await expect(page.locator('#setting-contact')).toHaveValue(process.env.NEON_EXPECT_PROMOTION_CONTACT);

@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { readFile, writeFile, access, mkdir, unlink } from 'node:fs/promises';
 import { writeFileSync } from 'node:fs';
 import { resolve, join, relative, isAbsolute, sep } from 'node:path';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, createHash } from 'node:crypto';
 import pg from 'pg';
 import { hashPassword } from '../server/auth.js';
 import { PostgresStore } from '../server/neon/store.js';
@@ -54,13 +54,24 @@ async function prepareCredentials() {
 }
 
 const command = process.argv[2] ?? 'inspect';
-if (['inspect', 'migrate', 'verify', 'inventory-plan', 'inventory-apply', 'set-contact', 'test-winner-create', 'test-winner-delete'].includes(command)) {
+if (['inspect', 'migrate', 'verify', 'inventory-plan', 'inventory-apply', 'set-contact', 'test-winner-create', 'test-winner-delete', 'require-presence'].includes(command)) {
   if (command === 'inventory-apply' && process.argv[3] !== '--confirm=APPLY_INVENTORY') throw new Error('Explicit --confirm=APPLY_INVENTORY is required.');
   if (command === 'set-contact' && (!process.argv[3] || process.argv[4] !== '--confirm=UPDATE_CONTACT')) throw new Error('Provide a public contact and --confirm=UPDATE_CONTACT.');
   if (command === 'test-winner-create' && process.argv[3] !== '--confirm=CREATE_TEST_WINNER') throw new Error('Explicit --confirm=CREATE_TEST_WINNER is required.');
   if (command === 'test-winner-delete' && process.argv[3] !== '--confirm=DELETE_TEST_WINNER') throw new Error('Explicit --confirm=DELETE_TEST_WINNER is required.');
+  if (command === 'require-presence' && (process.argv[3] !== '--confirm=REQUIRE_PRESENCE' || process.argv[4] !== '--owner-reviewed-terms')) throw new Error('Explicit --confirm=REQUIRE_PRESENCE and owner confirmation via --owner-reviewed-terms are required.');
   const pool = new pg.Pool({ connectionString: await databaseUrl(), max: 2, connectionTimeoutMillis: 15_000 });
   try {
+    if (command === 'require-presence') {
+      const catalog = JSON.parse(await readFile(join(root, 'config/prizes.json'), 'utf8'));
+      const store = new PostgresStore(pool, catalog);
+      await store.initialize();
+      // Never supply this confirmation on behalf of an owner who has not reviewed the new rules.
+      const game = new Game(store, catalog, { production: true, publicUrl: target.publicUrl });
+      const saved = store.state.settings.presenceRequired ? game.safeSettings(store.state.settings)
+        : await game.updateSettings({ presenceRequired: true, promotionReviewed: true });
+      console.log(JSON.stringify({ presenceRequired: saved.presenceRequired, campaignActive: saved.campaignActive, promotionReviewedAt: saved.promotionReviewedAt }, null, 2));
+    }
     if (command.startsWith('test-winner-')) {
       const markerPath = join(configDir, 'test-winner.json');
       const qrPath = join(root, 'artifacts/test-winner-qr.png');
@@ -127,9 +138,12 @@ if (['inspect', 'migrate', 'verify', 'inventory-plan', 'inventory-apply', 'set-c
       const { rows: states } = await pool.query('SELECT document FROM premio.state WHERE id = 1');
       const state = states[0]?.document;
       validateState(state);
+      const { totalParticipations, cycleProgress, participations, coupons, inventory, settings, audit } = state;
+      const businessFingerprint = createHash('sha256').update(JSON.stringify({ totalParticipations, cycleProgress, participations, coupons, inventory, settings, audit })).digest('hex');
       console.log(JSON.stringify({ active: state.settings.campaignActive, cooldownEnabled: state.settings.cooldownEnabled,
         cooldownHours: state.settings.cooldownHours, stock: Object.values(state.inventory).reduce((sum, value) => sum + value, 0),
-        participations: state.totalParticipations, coupons: state.coupons.length, testCoupons: (state.testCoupons ?? []).length, auditEntries: state.audit.length,
+        participations: state.totalParticipations, coupons: state.coupons.length, testCoupons: (state.testCoupons ?? []).length,
+        presenceRequired: state.settings.presenceRequired === true, visits: (state.visits ?? []).length, auditEntries: state.audit.length, businessFingerprint,
         verificationSchemasRemaining: rows.some((row) => row.table_schema.startsWith('premio_verify_')) }, null, 2));
     }
   } finally { await pool.end(); }
@@ -161,4 +175,4 @@ if (['inspect', 'migrate', 'verify', 'inventory-plan', 'inventory-apply', 'set-c
   await mkdir(join(root, 'artifacts'), { recursive: true });
   await writeFile(join(root, 'artifacts/neon-deployment.json'), JSON.stringify(safe, null, 2));
   console.log(JSON.stringify(safe, null, 2));
-} else throw new Error('Use inspect, migrate, test, deploy, verify, inventory-plan, inventory-apply, set-contact, test-winner-create, test-winner-delete or diagnose.');
+} else throw new Error('Use inspect, migrate, test, deploy, verify, inventory-plan, inventory-apply, set-contact, test-winner-create, test-winner-delete, require-presence or diagnose.');
