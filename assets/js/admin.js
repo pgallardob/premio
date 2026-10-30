@@ -1,7 +1,7 @@
-import { request, setCsrfToken } from './api.js?v=0.2.2';
-import { $, $$, element, icon, message, busy, formatDate, statusChip, emptyState, openDialog, initializeDialogs, toast } from './ui.js?v=0.2.2';
-import { onParticipationRecorded } from './updates.js?v=0.2.2';
-import { deployment } from './deployment.js?v=0.2.2';
+import { request, setCsrfToken } from './api.js?v=0.2.3';
+import { $, $$, element, icon, message, busy, formatDate, statusChip, emptyState, openDialog, initializeDialogs, toast } from './ui.js?v=0.2.3';
+import { onParticipationRecorded } from './updates.js?v=0.2.3';
+import { deployment } from './deployment.js?v=0.2.3';
 
 let dashboard;
 let signedIn = false;
@@ -249,10 +249,26 @@ function renderSettings() {
   $('#setting-cooldown').checked = settings.cooldownEnabled;
   $('#setting-daily-enabled').checked = settings.dailyCodeEnabled;
   $('#setting-active').checked = settings.campaignActive;
+  $('#setting-contact').value = settings.promotionContact ?? '';
+  $('#setting-reviewed').checked = settings.promotionReviewed === true;
+  $('#promotion-review-status').textContent = settings.promotionReviewed
+    ? settings.promotionReviewedAt ? `Confirmación guardada el ${formatDate(settings.promotionReviewedAt, true)}.` : 'La revisión ya está confirmada en la configuración.'
+    : 'La confirmación está pendiente. No se marca automáticamente.';
   $('#setting-daily-code').value = '';
   $('#daily-code-status').textContent = settings.hasDailyCode ? 'Ya hay un código configurado para hoy. No se muestra ni se guarda en texto plano.' : 'No hay un código vigente para hoy. Configura uno antes de activar la verificación.';
 }
 $('#settings-form').addEventListener('input', () => { settingsDirty = true; });
+for (const id of ['setting-contact', 'setting-interval', 'setting-expiry', 'setting-daily-enabled']) {
+  document.getElementById(id).addEventListener('input', () => {
+    $('#setting-reviewed').checked = false;
+    $('#promotion-review-status').textContent = 'La configuración cambió. Revisa las bases y confirma nuevamente antes de activar.';
+  });
+}
+$('#setting-reviewed').addEventListener('input', () => {
+  $('#promotion-review-status').textContent = $('#setting-reviewed').checked
+    ? 'La confirmación se registrará al guardar la experiencia.'
+    : 'La revisión no está confirmada. Pausa la campaña antes de retirar una confirmación guardada.';
+});
 $('#settings-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const button = $('button[type="submit"]', event.currentTarget);
@@ -263,19 +279,24 @@ $('#settings-form').addEventListener('submit', async (event) => {
     expiryDays: Number($('#setting-expiry').value),
     dailyCodeEnabled: $('#setting-daily-enabled').checked,
     campaignActive: $('#setting-active').checked,
+    promotionContact: $('#setting-contact').value.trim(),
+    promotionReviewed: $('#setting-reviewed').checked,
   };
   const code = $('#setting-daily-code').value.trim();
   if (code) data.dailyCode = code;
   try {
-    await request('/api/admin/settings', { method: 'PATCH', body: data });
+    const saved = await request('/api/admin/settings', { method: 'PATCH', body: data });
     settingsDirty = false;
     lastSettings = '';
     $('#setting-daily-code').value = '';
     await refreshAfterMutation();
-    message($('#settings-message'), 'La experiencia se actualizó correctamente.', 'success');
-    toast('Reglas guardadas. Todo listo para el próximo buen momento.');
+    message($('#settings-message'), `La experiencia se actualizó correctamente. ${saved.campaignActive ? 'La campaña está activa.' : 'La campaña permanece en pausa.'}`, 'success');
+    toast(saved.campaignActive ? 'Campaña activa.' : 'Configuración guardada. La campaña sigue pausada.');
   } catch (error) { handleError(error, $('#settings-message')); }
-  finally { busy(button, false); }
+  finally {
+    busy(button, false);
+    if (signedIn && $('#settings-message').textContent) $('#settings-message').scrollIntoView({ block: 'nearest', behavior: 'auto' });
+  }
 });
 
 function loadDashboard({ background = false } = {}) {
