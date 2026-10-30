@@ -1,4 +1,4 @@
-import { deployment } from './deployment.js?v=0.2.1';
+import { deployment } from './deployment.js?v=0.2.2';
 
 let installPrompt;
 const button = document.getElementById('install-app');

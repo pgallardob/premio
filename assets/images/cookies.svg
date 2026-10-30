@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="440" viewBox="0 0 360 440">
+  <defs>
+    <linearGradient id="pack" x1="0" x2="1"><stop stop-color="#48663a"/><stop offset=".45" stop-color="#9eaf72"/><stop offset="1" stop-color="#35582f"/></linearGradient>
+    <radialGradient id="biscuit"><stop stop-color="#ead09a"/><stop offset=".8" stop-color="#c99d60"/><stop offset="1" stop-color="#8e623a"/></radialGradient>
+  </defs>
+  <ellipse cx="180" cy="397" rx="105" ry="12" fill="#000" opacity=".16"/>
+  <path d="M93 81 111 69 127 80 145 69 163 79 181 69 199 80 218 70 239 81 260 69 267 349 247 363 228 351 209 364 190 352 171 365 151 352 132 366 111 353 91 364Z" fill="url(#pack)"/>
+  <path d="M108 96H249M108 335H249" stroke="#d6dfb2" stroke-opacity=".4" stroke-width="3"/>
+  <rect x="115" y="123" width="129" height="85" rx="12" fill="#edf0ce" opacity=".92"/>
+  <path d="M140 150H219M151 165H209M160 181H199" stroke="#48633d" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="161" cy="272" r="56" fill="url(#biscuit)" stroke="#f1dab0" stroke-width="3"/>
+  <circle cx="216" cy="314" r="50" fill="url(#biscuit)" stroke="#f1dab0" stroke-width="3"/>
+  <g fill="#79533a"><circle cx="145" cy="249" r="5"/><circle cx="177" cy="260" r="6"/><circle cx="145" cy="286" r="6"/><circle cx="177" cy="293" r="4"/><circle cx="206" cy="292" r="5"/><circle cx="235" cy="316" r="5"/><circle cx="207" cy="336" r="6"/></g>
+  <path d="M112 111 119 315" stroke="#fff" stroke-opacity=".18" stroke-width="8" stroke-linecap="round"/>
+</svg>

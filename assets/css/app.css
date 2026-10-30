@@ -72,19 +72,19 @@ html { scroll-padding-top: calc(var(--site-header-height) + env(safe-area-inset-
 .section-heading .eyebrow { margin-bottom: 1.15rem; }
 .section h2 { margin: 0; font-size: clamp(2rem, 3.5vw, 3rem); line-height: 1.15; letter-spacing: -.055em; }
 .section-heading__aside { margin: 0 .2rem .2rem 0; font-size: .75rem; line-height: 1.9; color: var(--muted); }
-.prize-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.2rem; }
+.prize-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1rem; }
 .prize-card { position: relative; margin: 0; overflow: hidden; padding: 0; border: 1px solid #3a49323d; border-radius: 16px; background: linear-gradient(145deg, #182119, #101811); transition: border-color 250ms, transform 250ms; }
 .prize-card:hover { transform: translateY(-5px); border-color: #8caa605c; }
 .prize-card__art { position: relative; height: 252px; display: grid; place-items: center; overflow: hidden; background: radial-gradient(ellipse at 50% 60%, #77985228, #1b25150d 70%); }
-.prize-card[data-prize='snack'] .prize-card__art { background: radial-gradient(ellipse at 50% 60%, #aa653e21, #2e21150d 70%); }
-.prize-card[data-prize='coffee'] .prize-card__art { background: radial-gradient(ellipse at 50% 60%, #c4a56c25, #29281908 70%); }
+.prize-card[data-prize='cookies'] .prize-card__art { background: radial-gradient(ellipse at 50% 60%, #aa653e21, #2e21150d 70%); }
+.prize-card[data-prize='planner'] .prize-card__art { background: radial-gradient(ellipse at 50% 60%, #c4a56c25, #29281908 70%); }
 .prize-card__art::after { content: ''; position: absolute; bottom: 21px; left: 15%; width: 70%; height: 1px; background: linear-gradient(90deg, transparent, #9fa88b25, transparent); }
-.prize-card__image { width: 170px; height: 210px; object-fit: contain; filter: drop-shadow(15px 20px 15px #0005); transform: rotate(-9deg); transition: transform 450ms; }
+.prize-card__image { width: 170px; max-width: 100%; height: 210px; object-fit: contain; filter: drop-shadow(15px 20px 15px #0005); transform: rotate(-9deg); transition: transform 450ms; }
 .prize-card:hover .prize-card__image { transform: rotate(-4deg) translateY(-4px); }
-.prize-card[data-prize='snack'] .prize-card__image { width: 190px; }
-.prize-card[data-prize='coffee'] .prize-card__image { width: 200px; transform: rotate(6deg); }
+.prize-card[data-prize='cookies'] .prize-card__image { width: 190px; }
+.prize-card[data-prize='planner'] .prize-card__image { width: 200px; transform: rotate(6deg); }
 .prize-card__category { position: absolute; top: 1.3rem; left: 1.25rem; color: #aab69e; font-size: .5rem; font-weight: 700; letter-spacing: .14em; }
-.prize-card__stock { position: absolute; top: 1.15rem; right: 1.15rem; padding: .25rem .5rem; background: #a8d0780c; color: #afc88c; border: 1px solid #a8d07822; border-radius: 20px; font-size: .48rem; }
+.prize-card__stock { position: absolute; bottom: .8rem; right: .8rem; padding: .25rem .5rem; background: #a8d0780c; color: #afc88c; border: 1px solid #a8d07822; border-radius: 20px; font-size: .48rem; }
 .prize-card__body { padding: 0 1.4rem 1.6rem; }
 .prize-card__body h3 { font-size: 1.25rem; letter-spacing: -.03em; margin-bottom: .6rem; }
 .prize-card__body p { color: var(--muted); font-size: .68rem; line-height: 1.9; margin: 0; max-width: 270px; }
@@ -214,9 +214,9 @@ html { scroll-padding-top: calc(var(--site-header-height) + env(safe-area-inset-
   .prize-grid { gap: .7rem; }
   .prize-card__art { height: 200px; }
   .prize-card__image { width: 130px; height: 160px; }
-  .prize-card[data-prize='snack'] .prize-card__image, .prize-card[data-prize='coffee'] .prize-card__image { width: 145px; }
+  .prize-card[data-prize='cookies'] .prize-card__image, .prize-card[data-prize='planner'] .prize-card__image { width: 145px; }
   .prize-card__category { font-size: .4rem; top: .85rem; left: .8rem; }
-  .prize-card__stock { top: 1.9rem; left: .8rem; right: auto; font-size: .4rem; }
+  .prize-card__stock { top: 1.9rem; bottom: auto; left: .8rem; right: auto; font-size: .4rem; }
   .prize-card__body { padding: 0 .8rem 1rem; }
   .prize-card__body h3 { font-size: 1rem; }
   .prize-card__body p { font-size: .6rem; }
@@ -233,7 +233,7 @@ html { scroll-padding-top: calc(var(--site-header-height) + env(safe-area-inset-
   .section-heading__aside { max-width: 220px; padding-top: 0; font-size: .7rem; }
   .prize-card__art { height: 170px; }
   .prize-card__image { width: 135px; height: 155px; }
-  .prize-card[data-prize='snack'] .prize-card__image, .prize-card[data-prize='coffee'] .prize-card__image { width: 145px; }
+  .prize-card[data-prize='cookies'] .prize-card__image, .prize-card[data-prize='planner'] .prize-card__image { width: 145px; }
   .prize-card__body { padding: 0 1rem 1rem; }
   .prize-card__body h3 { font-size: 1.1rem; }
   .prize-card__body p { font-size: .75rem; line-height: 1.7; }
@@ -306,7 +306,7 @@ html { scroll-padding-top: calc(var(--site-header-height) + env(safe-area-inset-
   .prize-card__art { height: 205px; overflow: visible; }
   .prize-card__art::after { display: none; }
   .prize-card__image { width: 128px; height: 155px; margin-top: 30px; }
-  .prize-card[data-prize='snack'] .prize-card__image, .prize-card[data-prize='coffee'] .prize-card__image { width: 145px; height: 160px; }
+  .prize-card[data-prize='cookies'] .prize-card__image, .prize-card[data-prize='planner'] .prize-card__image { width: 145px; height: 160px; }
   .prize-card__category { font-size: .43rem; top: 1rem; left: .9rem; }
   .prize-card__stock { top: auto; bottom: .75rem; right: .9rem; left: auto; font-size: .43rem; z-index: 1; white-space: nowrap; }
   .prize-card__body { padding: 1.2rem .9rem 1.5rem 0; }
@@ -393,4 +393,8 @@ html { scroll-padding-top: calc(var(--site-header-height) + env(safe-area-inset-
   .footer-brand { gap: .4rem; }
   .footer-brand .brand__logo { width: 50px; height: 28px; }
   .footer-brand .brand__logo img { width: 67px; height: 45px; top: -9px; left: -8px; }
+}
+@media (min-width: 601px) and (max-width: 900px) and (max-height: 650px) {
+  .prize-card__art { height: 140px; }
+  .prize-card__image, .prize-card[data-prize='cookies'] .prize-card__image, .prize-card[data-prize='planner'] .prize-card__image { width: 115px; height: 128px; }
 }

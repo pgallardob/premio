@@ -1,7 +1,7 @@
-import { request, setCsrfToken } from './api.js?v=0.2.1';
-import { $, $$, element, icon, message, busy, formatDate, statusChip, emptyState, openDialog, initializeDialogs, toast } from './ui.js?v=0.2.1';
-import { onParticipationRecorded } from './updates.js?v=0.2.1';
-import { deployment } from './deployment.js?v=0.2.1';
+import { request, setCsrfToken } from './api.js?v=0.2.2';
+import { $, $$, element, icon, message, busy, formatDate, statusChip, emptyState, openDialog, initializeDialogs, toast } from './ui.js?v=0.2.2';
+import { onParticipationRecorded } from './updates.js?v=0.2.2';
+import { deployment } from './deployment.js?v=0.2.2';
 
 let dashboard;
 let signedIn = false;

@@ -17,29 +17,47 @@ export const deployment = Object.freeze({
     },
     "prizes": [
       {
-        "id": "refreshment",
-        "name": "Una pausa refrescante",
-        "description": "Una bebida individual para refrescar tu día.",
-        "category": "BEBIDAS",
-        "image": "/premio/assets/images/refreshment.svg",
+        "id": "opener",
+        "name": "Destapador Monster",
+        "description": "Un destapador Monster para tu colección.",
+        "category": "ACCESORIOS",
+        "image": "/premio/assets/images/opener.svg",
         "featured": true,
         "stock": 0
       },
       {
-        "id": "snack",
-        "name": "Un pequeño antojo",
-        "description": "Un snack individual para ese momento de antojo.",
-        "category": "SNACKS",
-        "image": "/premio/assets/images/snack.svg",
+        "id": "cookies",
+        "name": "Galletas mini Costa",
+        "description": "Unas galletas mini Costa para disfrutar.",
+        "category": "GALLETAS",
+        "image": "/premio/assets/images/cookies.svg",
         "featured": false,
         "stock": 0
       },
       {
-        "id": "coffee",
-        "name": "Un momento de calma",
-        "description": "Un café individual para disfrutar sin apuro.",
-        "category": "CAFÉ",
-        "image": "/premio/assets/images/coffee.svg",
+        "id": "jokey",
+        "name": "Jokey",
+        "description": "Un Jokey disponible para ti en el local.",
+        "category": "ACCESORIOS",
+        "image": "/premio/assets/images/jokey.svg",
+        "featured": false,
+        "stock": 0
+      },
+      {
+        "id": "tshirt",
+        "name": "Polera",
+        "description": "Una polera para sumar a tus favoritos.",
+        "category": "VESTUARIO",
+        "image": "/premio/assets/images/tshirt.svg",
+        "featured": false,
+        "stock": 0
+      },
+      {
+        "id": "planner",
+        "name": "Agenda",
+        "description": "Una agenda para tus próximas ideas.",
+        "category": "PAPELERÍA",
+        "image": "/premio/assets/images/planner.svg",
         "featured": false,
         "stock": 0
       }

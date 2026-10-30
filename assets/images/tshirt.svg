@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="440" viewBox="0 0 360 440">
+  <defs><linearGradient id="cotton" x1="0" x2="1"><stop stop-color="#354c32"/><stop offset=".5" stop-color="#83945c"/><stop offset="1" stop-color="#30472f"/></linearGradient></defs>
+  <ellipse cx="180" cy="398" rx="103" ry="11" fill="#000" opacity=".16"/>
+  <path d="M125 65 80 83 32 160 92 195 115 165 106 373Q180 394 254 373L245 165 268 195 328 160 280 83 235 65Q180 94 125 65Z" fill="url(#cotton)" stroke="#a9b67e" stroke-opacity=".45" stroke-width="2"/>
+  <path d="M125 65Q180 126 235 65L220 63Q180 103 140 63Z" fill="#203626" stroke="#b8c78a" stroke-opacity=".55" stroke-width="3"/>
+  <path d="M115 165 123 99M245 165 237 99M108 360Q180 377 252 360M45 154 96 182M264 182 315 154" fill="none" stroke="#c6d39c" stroke-opacity=".3" stroke-width="3"/>
+  <path d="M149 207Q180 176 211 207Q180 241 149 207Z" fill="none" stroke="#d5dfb2" stroke-width="3"/>
+  <path d="M180 196V220M168 208H192" stroke="#d5dfb2" stroke-width="3" stroke-linecap="round"/>
+  <path d="M137 130 129 328M223 130 231 328" stroke="#fff" stroke-opacity=".08" stroke-width="9" stroke-linecap="round"/>
+</svg>
