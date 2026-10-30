@@ -21,7 +21,7 @@ El catálogo usa identificadores nuevos y cinco ilustraciones referenciales; no 
 
 El contacto solicitado está guardado. La revisión de bases y privacidad se confirma expresamente en **Administración → La experiencia** y permanece registrada entre reinicios. El mensaje de guardado ocupa todo el ancho bajo el botón y el texto de presentación de premios se adapta sin saltos de línea forzados.
 
-El único [QR ganador de prueba retenido](CUPON_PRUEBA.md) ya se creó, separado de los datos comerciales, sin vencimiento ni canje. Su marcador y enlace privados se conservan fuera de Git; la imagen generada está excluida del repositorio. Debe conservarse hasta que el propietario pida eliminarlo: no volver a generarlo como otro premio, reiniciar el contador, descontar stock ni crear participaciones para obtenerlo.
+El propietario confirmó que el [QR ganador de prueba](CUPON_PRUEBA.md) funcionó en su teléfono y en la validación web, y pidió eliminarlo. La eliminación ya se completó: no queda un cupón de prueba activo, su consulta API responde 404, el enlace ya no valida y se retiraron su marcador privado, QR e imágenes de verificación. No recrearlo sin una nueva solicitud. La campaña, las dos participaciones reales y las 58 unidades se conservaron.
 
 ## Implementado y comprobado
 
@@ -33,11 +33,11 @@ El único [QR ganador de prueba retenido](CUPON_PRUEBA.md) ya se creó, separado
 - Registros anteriores eliminados sin restaurarlos, sin modo de prueba público ni premios ficticios en producción.
 - Despliegue local con archivo y alternativa Docker/Caddy conservados, separados de la publicación en Neon.
 
-Evidencia: 23 pruebas existentes, ocho de inventario, seis de contacto y confirmación, cinco del cupón retenido y once comprobaciones contra PostgreSQL real. Los 21 recorridos de Chrome incluyen la vista ganadora de prueba en teléfono, PNG, colección y validación sin canje; se mantienen las siete comprobaciones PWA y la compilación estática. Los datos automáticos se crean y eliminan en instalaciones aisladas; el cupón privado solicitado se conserva separadamente hasta que el propietario pida borrarlo.
+Evidencia: 23 pruebas existentes, ocho de inventario, seis de contacto y confirmación, cinco del cupón retenido y once comprobaciones contra PostgreSQL real. Los 21 recorridos de Chrome incluyen la vista ganadora de prueba en teléfono, PNG, colección y validación sin canje; se mantienen las siete comprobaciones PWA y la compilación estática. Los datos automáticos se crean y eliminan en instalaciones aisladas. El ejemplo privado de la instalación real se eliminó tras la confirmación del propietario.
 
 ## Retomar en la próxima sesión
 
-1. Conservar el cupón de prueba solicitado y eliminarlo únicamente cuando lo pida el propietario; verificar el estado actual antes de operar.
+1. Definir si la elegibilidad exige una compra o solo presencia en el local antes de implementar códigos de un solo uso. Revisar después la conexión oficial de Instagram. Estas restricciones todavía no están implementadas.
 2. Revisar el inventario y las reservas antes de cualquier reposición; no repetir la carga inicial ya aplicada ni restaurar historial.
 3. Comprobar la participación desde computador y teléfonos físicos, el QR y un canje de un solo uso después de activar.
 4. Configurar respaldo PostgreSQL externo, calendario y verificación de restauración.

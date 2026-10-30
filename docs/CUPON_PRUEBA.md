@@ -1,5 +1,7 @@
 # Un QR ganador privado, sin afectar la campaña
 
+**Prueba finalizada:** el propietario confirmó el escaneo y la validación web y solicitó eliminar el ejemplo. El registro, su marcador y los archivos generados ya se eliminaron; la consulta API del cupón responde 404 y el enlace ya no valida. No existe una prueba activa ni debe recrearse como parte de una comprobación rutinaria. Los comandos siguientes documentan la capacidad para futuras solicitudes expresas.
+
 El propietario solicitó un cupón ganador para probar el escaneo desde su teléfono y conservarlo hasta pedir su eliminación. Es un recurso privado y no comercial: **permanece activo, sin vencimiento y sin posibilidad de canje**. No habilita un modo de repeticiones ni modifica las reglas de participantes reales.
 
 ## Crear o volver a mostrar el mismo QR
@@ -35,6 +37,6 @@ No ejecutar este paso como limpieza automática ni al finalizar una verificació
 node scripts/neon-tools.js test-winner-delete --confirm=DELETE_TEST_WINNER
 ```
 
-Comprueba el proyecto y el identificador `TST-…` del marcador privado, elimina solo ese registro de prueba y sus archivos generados conocidos. El enlace anterior devuelve 404 y deja de aparecer en las colecciones. No se borran cupones reales ni se cambia el contador o el inventario. Las copias que el usuario haya guardado en su teléfono no pueden retirarse remotamente, pero dejan de validarse en el servidor.
+Comprueba el proyecto y el identificador `TST-…` del marcador privado, elimina solo ese registro de prueba y sus archivos generados conocidos. La consulta API devuelve 404, el enlace deja de validar y el ejemplo desaparece de las colecciones. No se borran cupones reales ni se cambia el contador o el inventario. Las copias que el usuario haya guardado en su teléfono no pueden retirarse remotamente, pero dejan de validarse en el servidor.
 
 No publique el token o el QR en Git ni en documentación pública. La condición retenida es una excepción de este cupón, no una ampliación de vigencia de los premios reales.

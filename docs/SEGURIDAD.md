@@ -30,7 +30,17 @@ La aplicación tiene controles concretos de consistencia y acceso. La publicaci�
 - Existen comandos exclusivos de respaldo y restauración validados. La programación automática y el almacenamiento externo todavía deben configurarse en el alojamiento elegido.
 - Las pruebas no constituyen una auditoría de penetración.
 
-## Publicación recomendada para esta versión
+## Revisión pendiente: presencia e Instagram
+
+Estas mejoras están en análisis, no activadas. El QR público contiene una URL compartible; no certifica un escaneo físico, la ubicación ni una compra. El límite de 24 horas identifica al navegador y el contador de premios es global, no una garantía por cada 20 intentos personales. Cambiar de navegador o borrar su almacenamiento permite obtener otro identificador.
+
+La propuesta es autorizar cada participación con un código de un solo uso entregado por caja, consumido atómicamente en el servidor y con vencimiento breve. Un código por ticket limita entradas a compras efectivas, pero exigir compra modificaría las bases actuales de «no requiere compra»: el propietario debe decidir primero entre compra y visita. No se deben invalidar participaciones ya aceptadas ni presentar el código diario compartido como prueba de compra.
+
+Para Instagram no sirven el número total de seguidores ni un botón «Ya te sigo». La [API oficial de perfiles de mensajería](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/messaging-api/user-profile) ofrece `is_user_follow_business` a partir del ID recibido en una interacción consentida, como un DM iniciado por la persona. Requiere una cuenta profesional, autorización, permisos y webhooks. Comprueba el seguimiento actual, no una fecha de comienzo ni permanencia futura. No hay cuenta o aplicación Meta conectada en este proyecto.
+
+Un posible flujo vincula un desafío de un solo uso al navegador y al remitente de ese DM, verifica el seguimiento en el servidor y solo entonces registra la participación. Su implementación necesita definir las condiciones, conectar la cuenta y actualizar bases/privacidad conforme a las [normas de promociones de Instagram](https://help.instagram.com/179379842258600). No debe ocultarse en la interfaz un resultado que la API ya entregó ni fingirse una verificación por haber abierto un enlace.
+
+## Alternativa de publicación con archivo
 
 Un servidor con **un proceso Node.js, HTTPS mediante un proxy y un volumen persistente**. El proceso HTTP puede escuchar en la interfaz privada; `PUBLIC_URL` debe contener el origen HTTPS público. Con `NODE_ENV=production`, el arranque rechaza una URL pública HTTP.
 
